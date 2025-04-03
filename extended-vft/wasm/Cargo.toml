@@ -11,9 +11,6 @@ sails-rs.workspace = true
 sails-rs = { workspace = true, features = ["wasm-builder"] }
 sails-idl-gen.workspace = true
 sails-client-gen.workspace = true
-gtest.workspace = true
-gclient.workspace = true
-gear-wasm-instrument.workspace = true
 extended-vft-app = { path = "../app" }
 
 [lib]
