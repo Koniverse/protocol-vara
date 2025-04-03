@@ -12,13 +12,11 @@ scale-info.workspace = true
 vft-service.workspace = true
 
 [dev-dependencies]
+tokio = "1"
 env_logger.workspace = true
 gclient.workspace = true
 gtest.workspace = true
-gear-core.workspace = true
 extended_vft_wasm = { path = "../wasm", features = ["test"] }
-gear-wasm-instrument.workspace = true
-tokio = "1"
 
 [build-dependencies]
 gear-wasm-builder.workspace = true

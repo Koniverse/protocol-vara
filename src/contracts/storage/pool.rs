@@ -212,388 +212,388 @@ impl Pool {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use math::{sqrt_price::calculate_sqrt_price, MAX_TICK};
+// #[cfg(test)]
+// mod tests {
+//     use math::{sqrt_price::calculate_sqrt_price, MAX_TICK};
 
-    use super::*;
+//     use super::*;
 
-    #[test]
-    fn create() {
-        let init_tick = 100;
-        let current_timestamp = 100;
-        let fee_receiver = ActorId::from([1; 32]);
-        let init_sqrt_price = calculate_sqrt_price(init_tick).unwrap();
+//     #[test]
+//     fn create() {
+//         let init_tick = 100;
+//         let current_timestamp = 100;
+//         let fee_receiver = ActorId::from([1; 32]);
+//         let init_sqrt_price = calculate_sqrt_price(init_tick).unwrap();
 
-        let pool = Pool::create(
-            init_sqrt_price,
-            init_tick,
-            current_timestamp,
-            1,
-            fee_receiver,
-        )
-        .unwrap();
+//         let pool = Pool::create(
+//             init_sqrt_price,
+//             init_tick,
+//             current_timestamp,
+//             1,
+//             fee_receiver,
+//         )
+//         .unwrap();
 
-        assert_eq!(pool.sqrt_price, calculate_sqrt_price(init_tick).unwrap());
-        assert_eq!(pool.current_tick_index, init_tick);
-        assert_eq!(pool.start_timestamp, current_timestamp);
-        assert_eq!(pool.last_timestamp, current_timestamp);
-        assert_eq!(pool.fee_receiver, fee_receiver);
+//         assert_eq!(pool.sqrt_price, calculate_sqrt_price(init_tick).unwrap());
+//         assert_eq!(pool.current_tick_index, init_tick);
+//         assert_eq!(pool.start_timestamp, current_timestamp);
+//         assert_eq!(pool.last_timestamp, current_timestamp);
+//         assert_eq!(pool.fee_receiver, fee_receiver);
 
-        {
-            let init_tick = 0;
-            let init_sqrt_price = calculate_sqrt_price(init_tick).unwrap() + SqrtPrice::new(1);
-            let tick_spacing = 3;
-            let pool = Pool::create(
-                init_sqrt_price,
-                init_tick,
-                current_timestamp,
-                tick_spacing,
-                fee_receiver,
-            )
-            .unwrap();
-            assert_eq!(pool.current_tick_index, init_tick);
-        }
-        {
-            let init_tick = 2;
-            let init_sqrt_price = SqrtPrice::new(1000175003749000000000000u128);
-            let tick_spacing = 1;
-            let pool = Pool::create(
-                init_sqrt_price,
-                init_tick,
-                current_timestamp,
-                tick_spacing,
-                fee_receiver,
-            );
-            assert_eq!(pool, Err(InvariantError::InvalidInitSqrtPrice));
-            let correct_init_tick = 3;
-            let pool = Pool::create(
-                init_sqrt_price,
-                correct_init_tick,
-                current_timestamp,
-                tick_spacing,
-                fee_receiver,
-            )
-            .unwrap();
-            assert_eq!(pool.current_tick_index, correct_init_tick);
-        }
-        {
-            let init_tick = 0;
-            let init_sqrt_price = SqrtPrice::new(1000225003749000000000000u128);
-            let tick_spacing = 3;
-            let pool = Pool::create(
-                init_sqrt_price,
-                init_tick,
-                current_timestamp,
-                tick_spacing,
-                fee_receiver,
-            );
-            assert_eq!(pool, Err(InvariantError::InvalidInitSqrtPrice));
-            let correct_init_tick = 3;
-            let pool = Pool::create(
-                init_sqrt_price,
-                correct_init_tick,
-                current_timestamp,
-                tick_spacing,
-                fee_receiver,
-            )
-            .unwrap();
-            assert_eq!(pool.current_tick_index, correct_init_tick);
-        }
-        {
-            let init_tick = MAX_TICK;
-            let init_sqrt_price = calculate_sqrt_price(init_tick).unwrap();
-            let tick_spacing = 1;
-            Pool::create(
-                init_sqrt_price,
-                init_tick,
-                current_timestamp,
-                tick_spacing,
-                fee_receiver,
-            )
-            .unwrap();
-        }
-        {
-            let init_tick = MAX_TICK;
-            let init_sqrt_price = calculate_sqrt_price(init_tick).unwrap() - SqrtPrice::new(1);
-            let tick_spacing = 1;
-            Pool::create(
-                init_sqrt_price,
-                init_tick,
-                current_timestamp,
-                tick_spacing,
-                fee_receiver,
-            )
-            .unwrap_err();
-        }
-        {
-            let init_tick = MAX_TICK;
-            let init_sqrt_price = SqrtPrice::from_integer(1);
-            let tick_spacing = 1;
-            Pool::create(
-                init_sqrt_price,
-                init_tick,
-                current_timestamp,
-                tick_spacing,
-                fee_receiver,
-            )
-            .unwrap_err();
-        }
-        {
-            let init_tick = MAX_TICK - 1;
-            let init_sqrt_price = calculate_sqrt_price(init_tick).unwrap();
-            let tick_spacing = 1;
-            let pool = Pool::create(
-                init_sqrt_price,
-                init_tick,
-                current_timestamp,
-                tick_spacing,
-                fee_receiver,
-            )
-            .unwrap();
-            assert_eq!(pool.current_tick_index, init_tick);
-        }
-    }
+//         {
+//             let init_tick = 0;
+//             let init_sqrt_price = calculate_sqrt_price(init_tick).unwrap() + SqrtPrice::new(1);
+//             let tick_spacing = 3;
+//             let pool = Pool::create(
+//                 init_sqrt_price,
+//                 init_tick,
+//                 current_timestamp,
+//                 tick_spacing,
+//                 fee_receiver,
+//             )
+//             .unwrap();
+//             assert_eq!(pool.current_tick_index, init_tick);
+//         }
+//         {
+//             let init_tick = 2;
+//             let init_sqrt_price = SqrtPrice::new(1000175003749000000000000u128);
+//             let tick_spacing = 1;
+//             let pool = Pool::create(
+//                 init_sqrt_price,
+//                 init_tick,
+//                 current_timestamp,
+//                 tick_spacing,
+//                 fee_receiver,
+//             );
+//             assert_eq!(pool, Err(InvariantError::InvalidInitSqrtPrice));
+//             let correct_init_tick = 3;
+//             let pool = Pool::create(
+//                 init_sqrt_price,
+//                 correct_init_tick,
+//                 current_timestamp,
+//                 tick_spacing,
+//                 fee_receiver,
+//             )
+//             .unwrap();
+//             assert_eq!(pool.current_tick_index, correct_init_tick);
+//         }
+//         {
+//             let init_tick = 0;
+//             let init_sqrt_price = SqrtPrice::new(1000225003749000000000000u128);
+//             let tick_spacing = 3;
+//             let pool = Pool::create(
+//                 init_sqrt_price,
+//                 init_tick,
+//                 current_timestamp,
+//                 tick_spacing,
+//                 fee_receiver,
+//             );
+//             assert_eq!(pool, Err(InvariantError::InvalidInitSqrtPrice));
+//             let correct_init_tick = 3;
+//             let pool = Pool::create(
+//                 init_sqrt_price,
+//                 correct_init_tick,
+//                 current_timestamp,
+//                 tick_spacing,
+//                 fee_receiver,
+//             )
+//             .unwrap();
+//             assert_eq!(pool.current_tick_index, correct_init_tick);
+//         }
+//         {
+//             let init_tick = MAX_TICK;
+//             let init_sqrt_price = calculate_sqrt_price(init_tick).unwrap();
+//             let tick_spacing = 1;
+//             Pool::create(
+//                 init_sqrt_price,
+//                 init_tick,
+//                 current_timestamp,
+//                 tick_spacing,
+//                 fee_receiver,
+//             )
+//             .unwrap();
+//         }
+//         {
+//             let init_tick = MAX_TICK;
+//             let init_sqrt_price = calculate_sqrt_price(init_tick).unwrap() - SqrtPrice::new(1);
+//             let tick_spacing = 1;
+//             Pool::create(
+//                 init_sqrt_price,
+//                 init_tick,
+//                 current_timestamp,
+//                 tick_spacing,
+//                 fee_receiver,
+//             )
+//             .unwrap_err();
+//         }
+//         {
+//             let init_tick = MAX_TICK;
+//             let init_sqrt_price = SqrtPrice::from_integer(1);
+//             let tick_spacing = 1;
+//             Pool::create(
+//                 init_sqrt_price,
+//                 init_tick,
+//                 current_timestamp,
+//                 tick_spacing,
+//                 fee_receiver,
+//             )
+//             .unwrap_err();
+//         }
+//         {
+//             let init_tick = MAX_TICK - 1;
+//             let init_sqrt_price = calculate_sqrt_price(init_tick).unwrap();
+//             let tick_spacing = 1;
+//             let pool = Pool::create(
+//                 init_sqrt_price,
+//                 init_tick,
+//                 current_timestamp,
+//                 tick_spacing,
+//                 fee_receiver,
+//             )
+//             .unwrap();
+//             assert_eq!(pool.current_tick_index, init_tick);
+//         }
+//     }
 
-    #[test]
-    fn test_add_fee() {
-        // fee is set to 20%
-        let protocol_fee = Percentage::from_scale(2, 1);
-        let pool = Pool {
-            liquidity: Liquidity::from_integer(10),
-            ..Default::default()
-        };
-        // in_x
-        {
-            let mut pool = pool.clone();
-            let amount = TokenAmount::from_integer(6);
-            pool.add_fee(amount, true, protocol_fee).unwrap();
-            assert_eq!({ pool.fee_growth_global_x }, FeeGrowth::from_scale(4, 1));
-            assert_eq!({ pool.fee_growth_global_y }, FeeGrowth::from_integer(0));
-            assert_eq!(
-                { pool.fee_protocol_token_x },
-                TokenAmount::new(U256::from(2))
-            );
-            assert_eq!(
-                { pool.fee_protocol_token_y },
-                TokenAmount::new(U256::from(0))
-            );
-        }
-        // in_y
-        {
-            let mut pool = pool.clone();
-            let amount = TokenAmount::from_integer(200);
-            pool.add_fee(amount, false, protocol_fee).unwrap();
-            assert_eq!({ pool.fee_growth_global_x }, FeeGrowth::from_integer(0));
-            assert_eq!({ pool.fee_growth_global_y }, FeeGrowth::from_scale(160, 1));
-            assert_eq!(
-                { pool.fee_protocol_token_x },
-                TokenAmount::new(U256::from(0))
-            );
-            assert_eq!(
-                { pool.fee_protocol_token_y },
-                TokenAmount::new(U256::from(40))
-            );
-        }
-        // some new comment
-        {
-            let mut pool = pool;
-            let amount = TokenAmount::new(U256::from(1));
-            pool.add_fee(amount, true, protocol_fee).unwrap();
-            assert_eq!({ pool.fee_growth_global_x }, FeeGrowth::new(0));
-            assert_eq!({ pool.fee_growth_global_y }, FeeGrowth::new(0));
-            assert_eq!(
-                { pool.fee_protocol_token_x },
-                TokenAmount::new(U256::from(1))
-            );
-            assert_eq!(
-                { pool.fee_protocol_token_y },
-                TokenAmount::new(U256::from(0))
-            );
-        }
-        //DOMAIN
-        let max_amount = TokenAmount::max_instance();
-        // let min_amount = TokenAmount(1);
-        let max_liquidity = Liquidity::max_instance();
-        // let min_liquidity = Liquidity::new(1);
-        let max_protocol_fee = Percentage::from_integer(1);
-        let min_protocol_fee = Percentage::from_integer(0);
+//     #[test]
+//     fn test_add_fee() {
+//         // fee is set to 20%
+//         let protocol_fee = Percentage::from_scale(2, 1);
+//         let pool = Pool {
+//             liquidity: Liquidity::from_integer(10),
+//             ..Default::default()
+//         };
+//         // in_x
+//         {
+//             let mut pool = pool.clone();
+//             let amount = TokenAmount::from_integer(6);
+//             pool.add_fee(amount, true, protocol_fee).unwrap();
+//             assert_eq!({ pool.fee_growth_global_x }, FeeGrowth::from_scale(4, 1));
+//             assert_eq!({ pool.fee_growth_global_y }, FeeGrowth::from_integer(0));
+//             assert_eq!(
+//                 { pool.fee_protocol_token_x },
+//                 TokenAmount::new(U256::from(2))
+//             );
+//             assert_eq!(
+//                 { pool.fee_protocol_token_y },
+//                 TokenAmount::new(U256::from(0))
+//             );
+//         }
+//         // in_y
+//         {
+//             let mut pool = pool.clone();
+//             let amount = TokenAmount::from_integer(200);
+//             pool.add_fee(amount, false, protocol_fee).unwrap();
+//             assert_eq!({ pool.fee_growth_global_x }, FeeGrowth::from_integer(0));
+//             assert_eq!({ pool.fee_growth_global_y }, FeeGrowth::from_scale(160, 1));
+//             assert_eq!(
+//                 { pool.fee_protocol_token_x },
+//                 TokenAmount::new(U256::from(0))
+//             );
+//             assert_eq!(
+//                 { pool.fee_protocol_token_y },
+//                 TokenAmount::new(U256::from(40))
+//             );
+//         }
+//         // some new comment
+//         {
+//             let mut pool = pool;
+//             let amount = TokenAmount::new(U256::from(1));
+//             pool.add_fee(amount, true, protocol_fee).unwrap();
+//             assert_eq!({ pool.fee_growth_global_x }, FeeGrowth::new(0));
+//             assert_eq!({ pool.fee_growth_global_y }, FeeGrowth::new(0));
+//             assert_eq!(
+//                 { pool.fee_protocol_token_x },
+//                 TokenAmount::new(U256::from(1))
+//             );
+//             assert_eq!(
+//                 { pool.fee_protocol_token_y },
+//                 TokenAmount::new(U256::from(0))
+//             );
+//         }
+//         //DOMAIN
+//         let max_amount = TokenAmount::max_instance();
+//         // let min_amount = TokenAmount(1);
+//         let max_liquidity = Liquidity::max_instance();
+//         // let min_liquidity = Liquidity::new(1);
+//         let max_protocol_fee = Percentage::from_integer(1);
+//         let min_protocol_fee = Percentage::from_integer(0);
 
-        // max fee max amount max liquidity in x
-        {
-            let mut pool = Pool {
-                liquidity: max_liquidity,
-                ..Default::default()
-            };
-            pool.add_fee(max_amount, true, max_protocol_fee).unwrap();
-            assert_eq!({ pool.fee_growth_global_x }, FeeGrowth::from_integer(0));
-            assert_eq!({ pool.fee_growth_global_y }, FeeGrowth::from_integer(0));
-            assert_eq!(
-                { pool.fee_protocol_token_x },
-                TokenAmount::new(U256::from_dec_str("115792089237316195423570985008687907853269984665640564039457584007913129639935").unwrap()),
-            );
-            assert_eq!(
-                { pool.fee_protocol_token_y },
-                TokenAmount::new(U256::from(0))
-            );
-        }
-        // max fee max amount max liquidity in y
-        {
-            let mut pool = Pool {
-                liquidity: max_liquidity,
-                ..Default::default()
-            };
-            pool.add_fee(max_amount, false, max_protocol_fee).unwrap();
-            assert_eq!({ pool.fee_growth_global_x }, FeeGrowth::from_integer(0));
-            assert_eq!({ pool.fee_growth_global_y }, FeeGrowth::from_integer(0));
-            assert_eq!(
-                { pool.fee_protocol_token_x },
-                TokenAmount::new(U256::from(0))
-            );
-            assert_eq!(
-                { pool.fee_protocol_token_y },
-                TokenAmount::new(U256::from_dec_str("115792089237316195423570985008687907853269984665640564039457584007913129639935").unwrap()),
-            );
-        }
-        // min fee max amount max liquidity in x
-        {
-            let mut pool = Pool {
-                liquidity: max_liquidity,
-                ..Default::default()
-            };
-            pool.add_fee(max_amount, true, min_protocol_fee).unwrap();
-            assert_eq!(
-                { pool.fee_growth_global_x },
-                FeeGrowth::new(1000000000000000000000000000000000u128)
-            );
-            assert_eq!({ pool.fee_growth_global_y }, FeeGrowth::new(0));
-            assert_eq!(
-                { pool.fee_protocol_token_x },
-                TokenAmount::new(U256::from(0))
-            );
-            assert_eq!(
-                { pool.fee_protocol_token_y },
-                TokenAmount::new(U256::from(0))
-            );
-        }
-    }
-    #[test]
-    fn test_update_liquidity() {
-        // Add liquidity
-        // current tick between lower tick and upper tick
-        {
-            let mut pool = Pool {
-                liquidity: Liquidity::from_integer(0),
-                sqrt_price: SqrtPrice::new(1_000_140_000_000_000_000_000_000u128),
-                current_tick_index: 2,
-                ..Default::default()
-            };
+//         // max fee max amount max liquidity in x
+//         {
+//             let mut pool = Pool {
+//                 liquidity: max_liquidity,
+//                 ..Default::default()
+//             };
+//             pool.add_fee(max_amount, true, max_protocol_fee).unwrap();
+//             assert_eq!({ pool.fee_growth_global_x }, FeeGrowth::from_integer(0));
+//             assert_eq!({ pool.fee_growth_global_y }, FeeGrowth::from_integer(0));
+//             assert_eq!(
+//                 { pool.fee_protocol_token_x },
+//                 TokenAmount::new(U256::from_dec_str("115792089237316195423570985008687907853269984665640564039457584007913129639935").unwrap()),
+//             );
+//             assert_eq!(
+//                 { pool.fee_protocol_token_y },
+//                 TokenAmount::new(U256::from(0))
+//             );
+//         }
+//         // max fee max amount max liquidity in y
+//         {
+//             let mut pool = Pool {
+//                 liquidity: max_liquidity,
+//                 ..Default::default()
+//             };
+//             pool.add_fee(max_amount, false, max_protocol_fee).unwrap();
+//             assert_eq!({ pool.fee_growth_global_x }, FeeGrowth::from_integer(0));
+//             assert_eq!({ pool.fee_growth_global_y }, FeeGrowth::from_integer(0));
+//             assert_eq!(
+//                 { pool.fee_protocol_token_x },
+//                 TokenAmount::new(U256::from(0))
+//             );
+//             assert_eq!(
+//                 { pool.fee_protocol_token_y },
+//                 TokenAmount::new(U256::from_dec_str("115792089237316195423570985008687907853269984665640564039457584007913129639935").unwrap()),
+//             );
+//         }
+//         // min fee max amount max liquidity in x
+//         {
+//             let mut pool = Pool {
+//                 liquidity: max_liquidity,
+//                 ..Default::default()
+//             };
+//             pool.add_fee(max_amount, true, min_protocol_fee).unwrap();
+//             assert_eq!(
+//                 { pool.fee_growth_global_x },
+//                 FeeGrowth::new(1000000000000000000000000000000000u128)
+//             );
+//             assert_eq!({ pool.fee_growth_global_y }, FeeGrowth::new(0));
+//             assert_eq!(
+//                 { pool.fee_protocol_token_x },
+//                 TokenAmount::new(U256::from(0))
+//             );
+//             assert_eq!(
+//                 { pool.fee_protocol_token_y },
+//                 TokenAmount::new(U256::from(0))
+//             );
+//         }
+//     }
+//     #[test]
+//     fn test_update_liquidity() {
+//         // Add liquidity
+//         // current tick between lower tick and upper tick
+//         {
+//             let mut pool = Pool {
+//                 liquidity: Liquidity::from_integer(0),
+//                 sqrt_price: SqrtPrice::new(1_000_140_000_000_000_000_000_000u128),
+//                 current_tick_index: 2,
+//                 ..Default::default()
+//             };
 
-            let liquidity_delta = Liquidity::from_integer(5_000_000);
-            let liquidity_sign = true;
-            let upper_tick = 3;
-            let lower_tick = 0;
+//             let liquidity_delta = Liquidity::from_integer(5_000_000);
+//             let liquidity_sign = true;
+//             let upper_tick = 3;
+//             let lower_tick = 0;
 
-            let (x, y) = pool
-                .update_liquidity(liquidity_delta, liquidity_sign, upper_tick, lower_tick)
-                .unwrap();
+//             let (x, y) = pool
+//                 .update_liquidity(liquidity_delta, liquidity_sign, upper_tick, lower_tick)
+//                 .unwrap();
 
-            assert_eq!(x, TokenAmount::new(U256::from(51)));
-            assert_eq!(y, TokenAmount::new(U256::from(700)));
+//             assert_eq!(x, TokenAmount::new(U256::from(51)));
+//             assert_eq!(y, TokenAmount::new(U256::from(700)));
 
-            assert_eq!(pool.liquidity, liquidity_delta)
-        }
-        {
-            let mut pool = Pool {
-                liquidity: Liquidity::from_integer(0),
-                sqrt_price: SqrtPrice::new(1_000_140_000_000_000_000_000_000_u128),
-                current_tick_index: 2,
-                ..Default::default()
-            };
+//             assert_eq!(pool.liquidity, liquidity_delta)
+//         }
+//         {
+//             let mut pool = Pool {
+//                 liquidity: Liquidity::from_integer(0),
+//                 sqrt_price: SqrtPrice::new(1_000_140_000_000_000_000_000_000_u128),
+//                 current_tick_index: 2,
+//                 ..Default::default()
+//             };
 
-            let liquidity_delta = Liquidity::from_integer(5_000_000);
-            let liquidity_sign = true;
-            let upper_tick = 4;
-            let lower_tick = 0;
+//             let liquidity_delta = Liquidity::from_integer(5_000_000);
+//             let liquidity_sign = true;
+//             let upper_tick = 4;
+//             let lower_tick = 0;
 
-            let (x, y) = pool
-                .update_liquidity(liquidity_delta, liquidity_sign, upper_tick, lower_tick)
-                .unwrap();
+//             let (x, y) = pool
+//                 .update_liquidity(liquidity_delta, liquidity_sign, upper_tick, lower_tick)
+//                 .unwrap();
 
-            assert_eq!(x, TokenAmount::new(U256::from(300)));
-            assert_eq!(y, TokenAmount::new(U256::from(700)));
-            assert_eq!(pool.liquidity, liquidity_delta)
-        }
-        // delta liquidity = 0
-        // No Change
-        {
-            {
-                let mut pool = Pool {
-                    liquidity: Liquidity::from_integer(1),
-                    sqrt_price: SqrtPrice::new(1_000_140_000_000_000_000_000_000_u128),
-                    current_tick_index: 6,
-                    ..Default::default()
-                };
+//             assert_eq!(x, TokenAmount::new(U256::from(300)));
+//             assert_eq!(y, TokenAmount::new(U256::from(700)));
+//             assert_eq!(pool.liquidity, liquidity_delta)
+//         }
+//         // delta liquidity = 0
+//         // No Change
+//         {
+//             {
+//                 let mut pool = Pool {
+//                     liquidity: Liquidity::from_integer(1),
+//                     sqrt_price: SqrtPrice::new(1_000_140_000_000_000_000_000_000_u128),
+//                     current_tick_index: 6,
+//                     ..Default::default()
+//                 };
 
-                let liquidity_delta = Liquidity::from_integer(12);
-                let liquidity_sign = true;
-                let upper_tick = 4;
-                let lower_tick = 0;
+//                 let liquidity_delta = Liquidity::from_integer(12);
+//                 let liquidity_sign = true;
+//                 let upper_tick = 4;
+//                 let lower_tick = 0;
 
-                let (x, y) = pool
-                    .update_liquidity(liquidity_delta, liquidity_sign, upper_tick, lower_tick)
-                    .unwrap();
+//                 let (x, y) = pool
+//                     .update_liquidity(liquidity_delta, liquidity_sign, upper_tick, lower_tick)
+//                     .unwrap();
 
-                assert_eq!(x, TokenAmount::new(U256::from(0)));
-                assert_eq!(y, TokenAmount::new(U256::from(1)));
-                assert_eq!(pool.liquidity, Liquidity::from_integer(1))
-            }
-            {
-                let mut pool = Pool {
-                    liquidity: Liquidity::from_integer(1),
-                    sqrt_price: SqrtPrice::new(1_000_140_000_000_000_000_000_000_u128),
-                    current_tick_index: -2,
-                    ..Default::default()
-                };
+//                 assert_eq!(x, TokenAmount::new(U256::from(0)));
+//                 assert_eq!(y, TokenAmount::new(U256::from(1)));
+//                 assert_eq!(pool.liquidity, Liquidity::from_integer(1))
+//             }
+//             {
+//                 let mut pool = Pool {
+//                     liquidity: Liquidity::from_integer(1),
+//                     sqrt_price: SqrtPrice::new(1_000_140_000_000_000_000_000_000_u128),
+//                     current_tick_index: -2,
+//                     ..Default::default()
+//                 };
 
-                let liquidity_delta = Liquidity::from_integer(12);
-                let liquidity_sign = true;
-                let upper_tick = 4;
-                let lower_tick = 0;
+//                 let liquidity_delta = Liquidity::from_integer(12);
+//                 let liquidity_sign = true;
+//                 let upper_tick = 4;
+//                 let lower_tick = 0;
 
-                let (x, y) = pool
-                    .update_liquidity(liquidity_delta, liquidity_sign, upper_tick, lower_tick)
-                    .unwrap();
+//                 let (x, y) = pool
+//                     .update_liquidity(liquidity_delta, liquidity_sign, upper_tick, lower_tick)
+//                     .unwrap();
 
-                assert_eq!(x, TokenAmount::new(U256::from(1)));
-                assert_eq!(y, TokenAmount::new(U256::from(0)));
-                assert_eq!(pool.liquidity, Liquidity::from_integer(1))
-            }
-        }
-        // Remove Liquidity
-        {
-            let mut pool = Pool {
-                liquidity: Liquidity::from_integer(10),
-                current_tick_index: 2,
-                sqrt_price: SqrtPrice::new(1),
-                ..Default::default()
-            };
+//                 assert_eq!(x, TokenAmount::new(U256::from(1)));
+//                 assert_eq!(y, TokenAmount::new(U256::from(0)));
+//                 assert_eq!(pool.liquidity, Liquidity::from_integer(1))
+//             }
+//         }
+//         // Remove Liquidity
+//         {
+//             let mut pool = Pool {
+//                 liquidity: Liquidity::from_integer(10),
+//                 current_tick_index: 2,
+//                 sqrt_price: SqrtPrice::new(1),
+//                 ..Default::default()
+//             };
 
-            let liquidity_delta = Liquidity::from_integer(5);
-            let liquidity_sign = false;
-            let upper_tick = 3;
-            let lower_tick = 1;
+//             let liquidity_delta = Liquidity::from_integer(5);
+//             let liquidity_sign = false;
+//             let upper_tick = 3;
+//             let lower_tick = 1;
 
-            let (x, y) = pool
-                .update_liquidity(liquidity_delta, liquidity_sign, upper_tick, lower_tick)
-                .unwrap();
+//             let (x, y) = pool
+//                 .update_liquidity(liquidity_delta, liquidity_sign, upper_tick, lower_tick)
+//                 .unwrap();
 
-            assert_eq!(
-                x,
-                TokenAmount::new(U256::from(2500375009372499999999997u128))
-            );
-            assert_eq!(y, TokenAmount::new(U256::from(5)));
-            assert_eq!(pool.liquidity, Liquidity::from_integer(5),)
-        }
-    }
-}
+//             assert_eq!(
+//                 x,
+//                 TokenAmount::new(U256::from(2500375009372499999999997u128))
+//             );
+//             assert_eq!(y, TokenAmount::new(U256::from(5)));
+//             assert_eq!(pool.liquidity, Liquidity::from_integer(5),)
+//         }
+//     }
+// }

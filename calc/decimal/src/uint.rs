@@ -8,7 +8,8 @@ use crate::{UintCast, UintCheckedCast};
 use alloc::string::{String, ToString};
 use decimal_core::impl_units_casts;
 #[cfg(not(feature = "invariant-wasm"))]
-pub use sails_rs::{U128, U256, U512};
+pub use sails_rs::{U256};
+pub use primitive_types:: {U128, U512};
 
 use uint::construct_uint;
 

@@ -18,22 +18,18 @@ futures = { version = "0.3.30", features = [
 ], default-features = false }
 
 [build-dependencies]
-gear-wasm-builder.workspace = true
 io.workspace = true
 sails-idl-gen.workspace = true
-gear-wasm-instrument.workspace = true
+sails-rs = { workspace = true, features = ["wasm-builder"] }
 
 [dev-dependencies]
+tokio.workspace = true
 gtest.workspace = true
 gclient.workspace = true
-tokio.workspace = true
-gstd = { workspace = true, features = ["debug"] }
-gear-wasm-instrument.workspace = true
+sails-rs = { workspace = true, features = ["gtest"] }
 
 [features]
 binary-vendor = []
-wasm-opt = ["gear-wasm-builder/wasm-opt"]
-default = ["binary-vendor", "wasm-opt"]
 test = ["gstd/debug"]
 
 [workspace]
@@ -55,22 +51,22 @@ invariant.path = "."
 io.path = "io"
 
 # Gear dependencies
-gtest = "1.5.0"
-gclient = "1.5.0"
-gstd = "1.5.0"
-sails-idl-gen = "=0.3.0"
-sails-rs = "=0.3.0"
-gear-wasm-builder = "1.5.0"
-gear-wasm-instrument = "=1.5.0"
-sails-client-gen = "=0.3.0"
-gear-core = "1.5.0"
-vft-service = { git = "https://github.com/gear-foundation/standards", rev ="adafda03117173ab522aeb3eb3b87fd9a4c6f1c6" }
+gtest = "=1.7.1"
+gclient = "=1.7.1"
+gstd = "=1.7.1"
+sails-idl-gen = "=0.7.3"
+sails-rs = "=0.7.3"
+gear-wasm-builder = "=1.7.1"
+gear-wasm-instrument = "=1.7.1"
+sails-client-gen = "=0.7.3"
+vft-service = { git = "https://github.com/gear-foundation/standards" }
 
 # External
-parity-scale-codec = { version = "3.6.4", default-features = false }
-scale-info = { version = "2.5.0", default-features = false }
+scale-info = { version = "2", default-features = false }
+parity-scale-codec = { version = "3", default-features = false }
 tokio = { version = "1.36", features = ["full"] }
 xshell = "0.2"
 anyhow = "1"
 log = "*"
 env_logger = "*"
+primitive-types = { version = "0.13.1", default-features = false }

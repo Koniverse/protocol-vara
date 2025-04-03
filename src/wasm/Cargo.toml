@@ -8,12 +8,10 @@ invariant.workspace = true
 
 [build-dependencies]
 invariant.workspace = true
-gear-wasm-builder.workspace = true
 sails-idl-gen.workspace = true
-gtest.workspace = true
-gclient.workspace = true
-gear-wasm-instrument.workspace = true
+sails-rs = { workspace = true, features = ["wasm-builder"] }
 
 [features]
 default = []
 test = ["invariant/test"]
+
