@@ -1,12 +1,12 @@
 #!/bin/bash
 set -e 
 
-npm install
-npm run lint
-npm run wasm:build
+yarn install
+yarn lint
+yarn wasm:build
 ./package-wasm.sh
-npm run contract:build
-npm run erc-20:generate
-npm run invariant:generate
-npm run fix-generate
-npm run build
+yarn contract:build
+yarn erc-20:generate
+yarn invariant:generate
+yarn fix-generate
+yarn build

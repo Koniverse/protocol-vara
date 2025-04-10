@@ -48,16 +48,16 @@
     "contract:build": "cd ../ && ./build.sh dev-sdk",
     "invariant:copy": "cp ../src/wasm/invariant.idl ./contracts/invariant/invariant.idl && cp ../target/wasm32-unknown-unknown/release/invariant_wasm.opt.wasm ./contracts/invariant/invariant.opt.wasm",
     "erc-20:copy": "cp ../extended-vft/wasm/extended_vft.idl ./contracts/extended_vft/extended_vft.idl && cp ../target/wasm32-unknown-unknown/release/extended_vft_wasm.opt.wasm ./contracts/extended_vft/extended_vft.opt.wasm",
-    "invariant:generate": "npm run invariant:copy && npx sails-js generate ./contracts/invariant/invariant.idl -o ./src/invariant-contract.ts -n InvariantContract",
-    "erc-20:generate": "npm run erc-20:copy && npx sails-js generate ./contracts/extended_vft/extended_vft.idl -o ./src/erc20-token.ts -n Erc20Token",
-    "fix-generate": "node fix-generate.js"
+    "invariant:generate": "yarn invariant:copy && npx sails-js generate ./contracts/invariant/invariant.idl -o ./src/invariant-contract.ts -n InvariantContract",
+    "erc-20:generate": "yarn erc-20:copy && npx sails-js generate ./contracts/extended_vft/extended_vft.idl -o ./src/erc20-token.ts -n Erc20Token",
+    "fix-generate": "node ./fix-generate.js"
   },
   "dependencies": {
-    "@gear-js/api": "0.38.1",
+    "@gear-js/api": "0.41.0",
     "@invariant-labs/vara-sdk-wasm": "0.1.17",
-    "@polkadot/api": "11.0.2",
-    "@polkadot/types": "11.0.2",
-    "sails-js": "0.1.4"
+    "@polkadot/api": "15.9.1",
+    "@polkadot/types": "15.9.1",
+    "sails-js": "0.3.1"
   },
   "devDependencies": {
     "@types/chai": "^4.3.11",

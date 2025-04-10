@@ -4,3 +4,4 @@ gear
 .binpath
 sdk/src/wasm/pkg
 /.idea
+/sdk/build
