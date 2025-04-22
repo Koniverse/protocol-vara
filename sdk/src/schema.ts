@@ -1,4 +1,4 @@
-import { Liquidity } from '@invariant-labs/vara-sdk-wasm'
+import { Liquidity } from '@subwallet/invariant-vara-sdk-wasm'
 
 export {
   Liquidity,
@@ -32,7 +32,7 @@ export {
   Tickmap,
   SimulateSwapResult,
   InvariantError,
-} from '@invariant-labs/vara-sdk-wasm'
+} from '@subwallet/invariant-vara-sdk-wasm'
 
 export enum InvariantEvent {
   CrossTickEvent = 'CrossTickEvent',

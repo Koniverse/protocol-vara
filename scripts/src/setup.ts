@@ -12,7 +12,7 @@ import {
   toPercentage,
   subscribeToNewHeads,
   calculateSqrtPrice
-} from '@invariant-labs/vara-sdk'
+} from '@subwallet/invariant-vara-sdk'
 import dotenv from 'dotenv'
 
 dotenv.config()

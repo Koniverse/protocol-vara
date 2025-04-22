@@ -10,8 +10,8 @@ import {
   initGearApi,
   positionToTick,
   simulateInvariantSwap
-} from '@invariant-labs/vara-sdk'
-import { CHUNK_SIZE } from '@invariant-labs/vara-sdk/target/consts.js'
+} from '@subwallet/invariant-vara-sdk'
+import { CHUNK_SIZE } from '@subwallet/invariant-vara-sdk/target/consts.js'
 import assert from 'assert'
 import dotenv from 'dotenv'
 

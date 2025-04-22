@@ -2,7 +2,7 @@ import {
   Pool,
   PoolKey,
   Position
-} from '@invariant-labs/vara-sdk-wasm'
+} from '@subwallet/invariant-vara-sdk-wasm'
 import { assert } from 'chai'
 import { Invariant } from '../src/invariant'
 import { Network } from '../src/network'

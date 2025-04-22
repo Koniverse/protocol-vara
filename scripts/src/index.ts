@@ -17,7 +17,7 @@ import {
   Pool,
   Position,
   Tick
-} from '@invariant-labs/vara-sdk'
+} from '@subwallet/invariant-vara-sdk'
 
 const main = async () => {
   const api = await initGearApi(Network.Local)

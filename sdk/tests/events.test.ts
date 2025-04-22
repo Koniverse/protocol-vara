@@ -23,7 +23,7 @@ import {
   SwapEvent
 } from '../src/schema'
 import { decodeAddress } from '@gear-js/api'
-import { getGlobalMinSqrtPrice  } from '@invariant-labs/vara-sdk-wasm'
+import { getGlobalMinSqrtPrice  } from '@subwallet/invariant-vara-sdk-wasm'
 
 const api = await initGearApi(Network.Local)
 const admin = await GearKeyring.fromSuri('//Alice')

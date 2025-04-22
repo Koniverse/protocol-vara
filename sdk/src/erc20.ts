@@ -59,39 +59,39 @@ export class FungibleToken {
   }
 
   async allowance(owner: ActorId, spender: ActorId, tokenAddress: HexString): Promise<bigint> {
-    this.erc20.programId = tokenAddress
+    const erc20 = new Erc20Token(this.erc20.api, tokenAddress);
 
-    return this.erc20.vft.allowance(owner as any, spender as any, DEFAULT_ADDRESS)
+    return erc20.vft.allowance(owner as any, spender as any, DEFAULT_ADDRESS)
   }
 
   async balanceOf(owner: ActorId, tokenAddress: HexString): Promise<bigint> {
-    this.erc20.programId = tokenAddress
+    const erc20 = new Erc20Token(this.erc20.api, tokenAddress);
 
-    return this.erc20.vft.balanceOf(owner as any, DEFAULT_ADDRESS)
+    return erc20.vft.balanceOf(owner as any, DEFAULT_ADDRESS)
   }
 
   async decimals(tokenAddress: HexString): Promise<bigint> {
-    this.erc20.programId = tokenAddress
+    const erc20 = new Erc20Token(this.erc20.api, tokenAddress);
 
-    return BigInt(await this.erc20.vft.decimals(DEFAULT_ADDRESS))
+    return BigInt(await erc20.vft.decimals(DEFAULT_ADDRESS))
   }
 
   async name(tokenAddress: HexString): Promise<string> {
-    this.erc20.programId = tokenAddress
+    const erc20 = new Erc20Token(this.erc20.api, tokenAddress);
 
-    return this.erc20.vft.name(DEFAULT_ADDRESS)
+    return erc20.vft.name(DEFAULT_ADDRESS)
   }
 
   async symbol(tokenAddress: HexString): Promise<string> {
-    this.erc20.programId = tokenAddress
+    const erc20 = new Erc20Token(this.erc20.api, tokenAddress);
 
-    return this.erc20.vft.symbol(DEFAULT_ADDRESS)
+    return erc20.vft.symbol(DEFAULT_ADDRESS)
   }
 
   async totalSupply(tokenAddress: HexString): Promise<bigint> {
-    this.erc20.programId = tokenAddress
+    const erc20 = new Erc20Token(this.erc20.api, tokenAddress);
 
-    return this.erc20.vft.totalSupply(DEFAULT_ADDRESS)
+    return erc20.vft.totalSupply(DEFAULT_ADDRESS)
   }
 
   async approveTx(
@@ -100,10 +100,10 @@ export class FungibleToken {
     tokenAddress: HexString,
     gasLimit: bigint = this.gasLimit
   ) {
-    this.erc20.programId = tokenAddress
+    const erc20 = new Erc20Token(this.erc20.api, tokenAddress);
 
     return new TransactionWrapper<boolean>(
-      await this.erc20.vft.approve(spender as any, amount as any).withGas(gasLimit)
+      await erc20.vft.approve(spender as any, amount as any).withGas(gasLimit)
     )
   }
 
@@ -123,10 +123,10 @@ export class FungibleToken {
     tokenAddress: HexString,
     gasLimit: bigint = this.gasLimit
   ) {
-    this.erc20.programId = tokenAddress
+    const erc20 = new Erc20Token(this.erc20.api, tokenAddress);
 
     return new TransactionWrapper<boolean>(
-      await this.erc20.vft.burn(account as any, amount as any).withGas(gasLimit)
+      await erc20.vft.burn(account as any, amount as any).withGas(gasLimit)
     )
   }
 
@@ -145,10 +145,10 @@ export class FungibleToken {
     tokenAddress: HexString,
     gasLimit: bigint = this.gasLimit
   ) {
-    this.erc20.programId = tokenAddress
+    const erc20 = new Erc20Token(this.erc20.api, tokenAddress);
 
     return new TransactionWrapper<boolean>(
-      await this.erc20.vft.mint(account as any, amount as any).withGas(gasLimit)
+      await erc20.vft.mint(account as any, amount as any).withGas(gasLimit)
     )
   }
 
@@ -162,13 +162,13 @@ export class FungibleToken {
   }
 
   async setTransferFail(flag: boolean, tokenAddress: HexString, gasLimit: bigint = this.gasLimit) {
-    this.erc20.programId = tokenAddress
+    const erc20 = new Erc20Token(this.erc20.api, tokenAddress);
 
     if (!this.admin) {
       throw new Error('Admin account is required to set transfer failure')
     }
 
-    const tx = await this.erc20.vft.setTransferFail(flag).withGas(gasLimit)
+    const tx = await erc20.vft.setTransferFail(flag).withGas(gasLimit)
     const { response } = await tx.withAccount(this.admin).signAndSend()
     return response()
   }
@@ -179,10 +179,10 @@ export class FungibleToken {
     tokenAddress: HexString,
     gasLimit: bigint = this.gasLimit
   ) {
-    this.erc20.programId = tokenAddress
+    const erc20 = new Erc20Token(this.erc20.api, tokenAddress);
 
     return new TransactionWrapper<boolean>(
-      await this.erc20.vft.transfer(to as any, amount as any).withGas(gasLimit)
+      await erc20.vft.transfer(to as any, amount as any).withGas(gasLimit)
     )
   }
 
@@ -198,10 +198,10 @@ export class FungibleToken {
     tokenAddress: HexString,
     gasLimit: bigint = this.gasLimit
   ) {
-    this.erc20.programId = tokenAddress
+    const erc20 = new Erc20Token(this.erc20.api, tokenAddress);
 
     return new TransactionWrapper<boolean>(
-      await this.erc20.vft.transferFrom(from as any, to as any, amount as any).withGas(gasLimit)
+      await erc20.vft.transferFrom(from as any, to as any, amount as any).withGas(gasLimit)
     )
   }
 

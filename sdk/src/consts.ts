@@ -24,7 +24,7 @@ import {
   getSqrtPriceDenominator,
   getTokenAmountDenominator,
   getTickSearchRange
-} from '@invariant-labs/vara-sdk-wasm'
+} from '@subwallet/invariant-vara-sdk-wasm'
 import { HexString } from './utils.js'
 
 export const LOCAL = 'ws://127.0.0.1:9944'
@@ -68,15 +68,15 @@ export const CONCENTRATION_FACTOR = 1.00001526069123
 export const VARA_ADDRESS: HexString =
   '0x0000000000000000000000000000000000000000000000000000000000000000'
 export const TESTNET_INVARIANT_ADDRESS: HexString =
-  '0x06c71389bc9370b8e6a2d35b676cea3973c8ab10187e8390945ebb01fb6b66cd'
+  '0xda99688246cb1b34a880f072257783d7dfda08be8c51a2250c05f7d138d1682a'
 export const TESTNET_BTC_ADDRESS: HexString =
-  '0x80ea6ace20dcbfc95274987b4031ccc3e416461e9980b2e397eba4b5b470ff03'
+  '0x1ffa0525d01f0177288dd1419a66a12c20bab8db941c6831bbb03686888cb048'
 export const TESTNET_ETH_ADDRESS: HexString =
-  '0x59be95ad63df8369acc820d07bee8f86c75cbe72db3bdcb6822c0e7f3e2c8f50'
+  '0xcf5d1cab91d893c8a5d6686c35e46463e4957b7fa729bc73f111492d8f49b191'
 export const TESTNET_USDC_ADDRESS: HexString =
-  '0x5e5dbe4219abd39812b9b9dd80f2f3bf47c497a1910e64802abf97ca5edd4415'
+  '0x8310182c5b91e4114766d877e923af825801ef3f023f8d720d52d16987f9a3c7'
 export const TESTNET_SOL_ADDRESS: HexString =
-  '0x0d3b71c84950eb9d33a55af4a52523fffdb821601694653e7d038fb70de7fed6'
+  '0x6dce80d01a8ce83cbac76ddfbda67375bf3cee7ee03728a3e5946b8bd617be81'
 export const TESTNET_AZERO_ADDRESS: HexString =
-  '0x7d25efa0ec2eb985367f359bd8a213f10aad78cfa0c020f7642f8393cc69d773'
+  '0x1735b333d1c3bd14f6c61ba6fb9c0fbb29bf530243d0d837d2c7011517096000'
 

@@ -1,6 +1,7 @@
 import * as fs from 'fs'
 
 const filesToModify = ['./src/erc20-token.ts', './src/invariant-contract.ts']
+const typeFilesToModify = ['./src/erc20-token.global.d.ts', './src/invariant-contract.global.d.ts']
 
 String.prototype.replaceAt = function (index, replacement, length) {
   return this.substring(0, index) + replacement + this.substring(index + length)
@@ -17,6 +18,8 @@ for (const path of filesToModify) {
     .readFileSync(path, 'utf8')
     // fix missing invalid || null for v | undefined variable
     .replaceAll(`at: atBlock || null`, `at: atBlock`)
+    // fix lint semicolon error
+    .replaceAll(`.subscribeToGearEvent('UserMessageSent', ({ data: { message } }) => {;`, `.subscribeToGearEvent('UserMessageSent', ({ data: { message } }) => {`)
     // fix missing null check
     .replaceAll(
       ').toHex();\n    const reply = await this._program.api.message.calculateReply',
@@ -75,4 +78,40 @@ for (const path of filesToModify) {
     'message.payload)[2].toJSON() as any as {'
   )
   fs.writeFileSync(path, textBuff, 'utf8')
+}
+
+for (const path of filesToModify) {
+  const pathType = path.replace('.ts', '.global.d.ts');
+
+  let typeBuff = fs.readFileSync(pathType, 'utf8');
+
+  // Remove last semicolon
+  const searchStr = '\n};'
+  const replaceStr = ''
+  const indexOfSearchStr = typeBuff.lastIndexOf(searchStr);
+
+  if (indexOfSearchStr !== -1) {
+    typeBuff = typeBuff.replaceAt(indexOfSearchStr, replaceStr, searchStr.length);
+  }
+
+  // Remove import and declare global
+  const declareStr = 'declare global {';
+  const indexOfDeclareStr = typeBuff.indexOf(declareStr);
+  if (indexOfDeclareStr !== -1) {
+    typeBuff = typeBuff.slice(indexOfDeclareStr + declareStr.length);
+
+    typeBuff = typeBuff.split('\n').map(s => s.startsWith('  ') ? s.slice(2) : s).join('\n');
+  }
+
+  let contentBuff = fs.readFileSync(path, 'utf8');
+  const importString = 'import '
+  const indexOfImportStr = contentBuff.lastIndexOf(importString);
+  const nextLineIndex = contentBuff.indexOf('\n', indexOfImportStr);
+
+  contentBuff = contentBuff.substring(0, nextLineIndex) + '\n' + typeBuff + contentBuff.substring(nextLineIndex)
+
+
+  // Fix error lint
+  fs.writeFileSync(path, contentBuff, 'utf8')
+  fs.rmSync(pathType)
 }

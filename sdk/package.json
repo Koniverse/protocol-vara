@@ -1,5 +1,5 @@
 {
-  "name": "@invariant-labs/vara-sdk",
+  "name": "@subwallet/invariant-vara-sdk",
   "version": "0.1.21",
   "collaborators": [
     "Invariant Labs"
@@ -21,6 +21,7 @@
   },
   "scripts": {
     "build": "npx tsc -b --verbose",
+    "postbuild": "node ./post-build.js",
     "lint": "npx eslint . --ext .ts",
     "node:local": "../target/tmp/gear --dev -l=error",
     "node:local:stop": "pkill -9 gear",
@@ -48,16 +49,16 @@
     "contract:build": "cd ../ && ./build.sh dev-sdk",
     "invariant:copy": "cp ../src/wasm/invariant.idl ./contracts/invariant/invariant.idl && cp ../target/wasm32-unknown-unknown/release/invariant_wasm.opt.wasm ./contracts/invariant/invariant.opt.wasm",
     "erc-20:copy": "cp ../extended-vft/wasm/extended_vft.idl ./contracts/extended_vft/extended_vft.idl && cp ../target/wasm32-unknown-unknown/release/extended_vft_wasm.opt.wasm ./contracts/extended_vft/extended_vft.opt.wasm",
-    "invariant:generate": "yarn invariant:copy && npx sails-js generate ./contracts/invariant/invariant.idl -o ./src/invariant-contract.ts -n InvariantContract",
-    "erc-20:generate": "yarn erc-20:copy && npx sails-js generate ./contracts/extended_vft/extended_vft.idl -o ./src/erc20-token.ts -n Erc20Token",
+    "invariant:generate": "yarn invariant:copy && npx sails-js generate ./contracts/invariant/invariant.idl -o ./src/invariant-contract -n InvariantContract --no-project && mv ./src/invariant-contract/lib.ts ./src/invariant-contract.ts && mv ./src/invariant-contract/global.d.ts ./src/invariant-contract.global.d.ts && rm -r -f ./src/invariant-contract",
+    "erc-20:generate": "yarn erc-20:copy && npx sails-js generate ./contracts/extended_vft/extended_vft.idl -o ./src/erc20-token -n Erc20Token --no-project && mv ./src/erc20-token/lib.ts ./src/erc20-token.ts && mv ./src/erc20-token/global.d.ts ./src/erc20-token.global.d.ts && rm -r -f ./src/erc20-token",
     "fix-generate": "node ./fix-generate.js"
   },
   "dependencies": {
-    "@gear-js/api": "0.41.0",
-    "@invariant-labs/vara-sdk-wasm": "0.1.17",
+    "@gear-js/api": "0.41.1",
+    "@subwallet/invariant-vara-sdk-wasm": "file:./src/wasm/pkg",
     "@polkadot/api": "15.9.1",
     "@polkadot/types": "15.9.1",
-    "sails-js": "0.3.1"
+    "sails-js": "0.4.0"
   },
   "devDependencies": {
     "@types/chai": "^4.3.11",

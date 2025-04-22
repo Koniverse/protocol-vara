@@ -1,12 +1,13 @@
-import { GearApi, decodeAddress } from '@gear-js/api';
+import { GearApi, HexString, decodeAddress } from '@gear-js/api';
 import { TypeRegistry } from '@polkadot/types';
-import { TransactionBuilder, getServiceNamePrefix, getFnNamePrefix, ZERO_ADDRESS } from 'sails-js';
+import { TransactionBuilder, ActorId, throwOnErrorReply, getServiceNamePrefix, getFnNamePrefix, ZERO_ADDRESS } from 'sails-js';
+
 
 export class Erc20Token {
   public readonly registry: TypeRegistry;
   public readonly vft: Vft;
 
-  constructor(public api: GearApi, public programId?: `0x${string}`) {
+  constructor(public api: GearApi, private _programId?: `0x${string}`) {
     const types: Record<string, any> = {
     }
 
@@ -17,7 +18,12 @@ export class Erc20Token {
     this.vft = new Vft(this);
   }
 
-  newCtorFromCode(code: Uint8Array | any, name: string, symbol: string, decimals: number): TransactionBuilder<null> {
+  public get programId(): `0x${string}` {
+    if (!this._programId) throw new Error(`Program ID is not set`);
+    return this._programId;
+  }
+
+  newCtorFromCode(code: Uint8Array | Buffer | HexString, name: string, symbol: string, decimals: number): TransactionBuilder<null> {
     const builder = new TransactionBuilder<null>(
       this.api,
       this.registry,
@@ -28,7 +34,7 @@ export class Erc20Token {
       code,
     );
 
-    this.programId = builder.programId;
+    this._programId = builder.programId;
     return builder;
   }
 
@@ -43,7 +49,7 @@ export class Erc20Token {
       codeId,
     );
 
-    this.programId = builder.programId;
+    this._programId = builder.programId;
     return builder;
   }
 }
@@ -51,7 +57,7 @@ export class Erc20Token {
 export class Vft {
   constructor(private _program: Erc20Token) {}
 
-  public burn(from: string, value: number | string): TransactionBuilder<boolean> {
+  public burn(from: ActorId, value: number | string | bigint): TransactionBuilder<boolean> {
     if (!this._program.programId) throw new Error('Program ID is not set');
     return new TransactionBuilder<boolean>(
       this._program.api,
@@ -64,7 +70,7 @@ export class Vft {
     );
   }
 
-  public grantAdminRole(to: string): TransactionBuilder<null> {
+  public grantAdminRole(to: ActorId): TransactionBuilder<null> {
     if (!this._program.programId) throw new Error('Program ID is not set');
     return new TransactionBuilder<null>(
       this._program.api,
@@ -77,7 +83,7 @@ export class Vft {
     );
   }
 
-  public grantBurnerRole(to: string): TransactionBuilder<null> {
+  public grantBurnerRole(to: ActorId): TransactionBuilder<null> {
     if (!this._program.programId) throw new Error('Program ID is not set');
     return new TransactionBuilder<null>(
       this._program.api,
@@ -90,7 +96,7 @@ export class Vft {
     );
   }
 
-  public grantMinterRole(to: string): TransactionBuilder<null> {
+  public grantMinterRole(to: ActorId): TransactionBuilder<null> {
     if (!this._program.programId) throw new Error('Program ID is not set');
     return new TransactionBuilder<null>(
       this._program.api,
@@ -103,7 +109,7 @@ export class Vft {
     );
   }
 
-  public mint(to: string, value: number | string): TransactionBuilder<boolean> {
+  public mint(to: ActorId, value: number | string | bigint): TransactionBuilder<boolean> {
     if (!this._program.programId) throw new Error('Program ID is not set');
     return new TransactionBuilder<boolean>(
       this._program.api,
@@ -116,7 +122,7 @@ export class Vft {
     );
   }
 
-  public revokeAdminRole(from: string): TransactionBuilder<null> {
+  public revokeAdminRole(from: ActorId): TransactionBuilder<null> {
     if (!this._program.programId) throw new Error('Program ID is not set');
     return new TransactionBuilder<null>(
       this._program.api,
@@ -129,7 +135,7 @@ export class Vft {
     );
   }
 
-  public revokeBurnerRole(from: string): TransactionBuilder<null> {
+  public revokeBurnerRole(from: ActorId): TransactionBuilder<null> {
     if (!this._program.programId) throw new Error('Program ID is not set');
     return new TransactionBuilder<null>(
       this._program.api,
@@ -142,7 +148,7 @@ export class Vft {
     );
   }
 
-  public revokeMinterRole(from: string): TransactionBuilder<null> {
+  public revokeMinterRole(from: ActorId): TransactionBuilder<null> {
     if (!this._program.programId) throw new Error('Program ID is not set');
     return new TransactionBuilder<null>(
       this._program.api,
@@ -168,7 +174,7 @@ export class Vft {
     );
   }
 
-  public transfer(to: string, value: number | string): TransactionBuilder<boolean> {
+  public transfer(to: ActorId, value: number | string | bigint): TransactionBuilder<boolean> {
     if (!this._program.programId) throw new Error('Program ID is not set');
     return new TransactionBuilder<boolean>(
       this._program.api,
@@ -181,7 +187,7 @@ export class Vft {
     );
   }
 
-  public transferFrom(from: string, to: string, value: number | string): TransactionBuilder<boolean> {
+  public transferFrom(from: ActorId, to: ActorId, value: number | string | bigint): TransactionBuilder<boolean> {
     if (!this._program.programId) throw new Error('Program ID is not set');
     return new TransactionBuilder<boolean>(
       this._program.api,
@@ -194,7 +200,7 @@ export class Vft {
     );
   }
 
-  public approve(spender: string, value: number | string): TransactionBuilder<boolean> {
+  public approve(spender: ActorId, value: number | string | bigint): TransactionBuilder<boolean> {
     if (!this._program.programId) throw new Error('Program ID is not set');
     return new TransactionBuilder<boolean>(
       this._program.api,
@@ -207,189 +213,198 @@ export class Vft {
     );
   }
 
-  public async admins(originAddress: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<Array<string>> {
+  public async admins(originAddress?: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<Array<ActorId>> {
     const payload = this._program.registry.createType('(String, String)', ['Vft', 'Admins']).toHex();
     if (!this._program.programId) throw new Error('Program ID is not set');
     const reply = await this._program.api.message.calculateReply({
       destination: this._program.programId,
-      origin: decodeAddress(originAddress),
+      origin: originAddress ? decodeAddress(originAddress) : ZERO_ADDRESS,
       payload,
       value: value || 0,
       gasLimit: this._program.api.blockGasLimit.toBigInt(),
       at: atBlock,
     });
+    throwOnErrorReply(reply.code, reply.payload.toU8a(), this._program.api.specVersion, this._program.registry);
     const result = this._program.registry.createType('(String, String, Vec<[u8;32]>)', reply.payload);
-    return result[2].toJSON() as unknown as Array<string>;
+    return result[2].toJSON() as unknown as Array<ActorId>;
   }
 
-  public async burners(originAddress: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<Array<string>> {
+  public async burners(originAddress?: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<Array<ActorId>> {
     const payload = this._program.registry.createType('(String, String)', ['Vft', 'Burners']).toHex();
     if (!this._program.programId) throw new Error('Program ID is not set');
     const reply = await this._program.api.message.calculateReply({
       destination: this._program.programId,
-      origin: decodeAddress(originAddress),
+      origin: originAddress ? decodeAddress(originAddress) : ZERO_ADDRESS,
       payload,
       value: value || 0,
       gasLimit: this._program.api.blockGasLimit.toBigInt(),
       at: atBlock,
     });
+    throwOnErrorReply(reply.code, reply.payload.toU8a(), this._program.api.specVersion, this._program.registry);
     const result = this._program.registry.createType('(String, String, Vec<[u8;32]>)', reply.payload);
-    return result[2].toJSON() as unknown as Array<string>;
+    return result[2].toJSON() as unknown as Array<ActorId>;
   }
 
-  public async minters(originAddress: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<Array<string>> {
+  public async minters(originAddress?: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<Array<ActorId>> {
     const payload = this._program.registry.createType('(String, String)', ['Vft', 'Minters']).toHex();
     if (!this._program.programId) throw new Error('Program ID is not set');
     const reply = await this._program.api.message.calculateReply({
       destination: this._program.programId,
-      origin: decodeAddress(originAddress),
+      origin: originAddress ? decodeAddress(originAddress) : ZERO_ADDRESS,
       payload,
       value: value || 0,
       gasLimit: this._program.api.blockGasLimit.toBigInt(),
       at: atBlock,
     });
+    throwOnErrorReply(reply.code, reply.payload.toU8a(), this._program.api.specVersion, this._program.registry);
     const result = this._program.registry.createType('(String, String, Vec<[u8;32]>)', reply.payload);
-    return result[2].toJSON() as unknown as Array<string>;
+    return result[2].toJSON() as unknown as Array<ActorId>;
   }
 
-  public async allowance(owner: string, spender: string, originAddress: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<bigint> {
+  public async allowance(owner: ActorId, spender: ActorId, originAddress?: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<bigint> {
     const payload = this._program.registry.createType('(String, String, [u8;32], [u8;32])', ['Vft', 'Allowance', owner, spender]).toHex();
     if (!this._program.programId) throw new Error('Program ID is not set');
     const reply = await this._program.api.message.calculateReply({
       destination: this._program.programId,
-      origin: decodeAddress(originAddress),
+      origin: originAddress ? decodeAddress(originAddress) : ZERO_ADDRESS,
       payload,
       value: value || 0,
       gasLimit: this._program.api.blockGasLimit.toBigInt(),
       at: atBlock,
     });
+    throwOnErrorReply(reply.code, reply.payload.toU8a(), this._program.api.specVersion, this._program.registry);
     const result = this._program.registry.createType('(String, String, U256)', reply.payload);
     return result[2].toBigInt() as unknown as bigint;
   }
 
-  public async balanceOf(account: string, originAddress: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<bigint> {
+  public async balanceOf(account: ActorId, originAddress?: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<bigint> {
     const payload = this._program.registry.createType('(String, String, [u8;32])', ['Vft', 'BalanceOf', account]).toHex();
     if (!this._program.programId) throw new Error('Program ID is not set');
     const reply = await this._program.api.message.calculateReply({
       destination: this._program.programId,
-      origin: decodeAddress(originAddress),
+      origin: originAddress ? decodeAddress(originAddress) : ZERO_ADDRESS,
       payload,
       value: value || 0,
       gasLimit: this._program.api.blockGasLimit.toBigInt(),
       at: atBlock,
     });
+    throwOnErrorReply(reply.code, reply.payload.toU8a(), this._program.api.specVersion, this._program.registry);
     const result = this._program.registry.createType('(String, String, U256)', reply.payload);
     return result[2].toBigInt() as unknown as bigint;
   }
 
-  public async decimals(originAddress: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<number> {
+  public async decimals(originAddress?: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<number> {
     const payload = this._program.registry.createType('(String, String)', ['Vft', 'Decimals']).toHex();
     if (!this._program.programId) throw new Error('Program ID is not set');
     const reply = await this._program.api.message.calculateReply({
       destination: this._program.programId,
-      origin: decodeAddress(originAddress),
+      origin: originAddress ? decodeAddress(originAddress) : ZERO_ADDRESS,
       payload,
       value: value || 0,
       gasLimit: this._program.api.blockGasLimit.toBigInt(),
       at: atBlock,
     });
+    throwOnErrorReply(reply.code, reply.payload.toU8a(), this._program.api.specVersion, this._program.registry);
     const result = this._program.registry.createType('(String, String, u8)', reply.payload);
     return result[2].toNumber() as unknown as number;
   }
 
-  public async name(originAddress: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<string> {
+  public async name(originAddress?: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<string> {
     const payload = this._program.registry.createType('(String, String)', ['Vft', 'Name']).toHex();
     if (!this._program.programId) throw new Error('Program ID is not set');
     const reply = await this._program.api.message.calculateReply({
       destination: this._program.programId,
-      origin: decodeAddress(originAddress),
+      origin: originAddress ? decodeAddress(originAddress) : ZERO_ADDRESS,
       payload,
       value: value || 0,
       gasLimit: this._program.api.blockGasLimit.toBigInt(),
       at: atBlock,
     });
+    throwOnErrorReply(reply.code, reply.payload.toU8a(), this._program.api.specVersion, this._program.registry);
     const result = this._program.registry.createType('(String, String, String)', reply.payload);
     return result[2].toString() as unknown as string;
   }
 
-  public async symbol(originAddress: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<string> {
+  public async symbol(originAddress?: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<string> {
     const payload = this._program.registry.createType('(String, String)', ['Vft', 'Symbol']).toHex();
     if (!this._program.programId) throw new Error('Program ID is not set');
     const reply = await this._program.api.message.calculateReply({
       destination: this._program.programId,
-      origin: decodeAddress(originAddress),
+      origin: originAddress ? decodeAddress(originAddress) : ZERO_ADDRESS,
       payload,
       value: value || 0,
       gasLimit: this._program.api.blockGasLimit.toBigInt(),
       at: atBlock,
     });
+    throwOnErrorReply(reply.code, reply.payload.toU8a(), this._program.api.specVersion, this._program.registry);
     const result = this._program.registry.createType('(String, String, String)', reply.payload);
     return result[2].toString() as unknown as string;
   }
 
-  public async totalSupply(originAddress: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<bigint> {
+  public async totalSupply(originAddress?: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<bigint> {
     const payload = this._program.registry.createType('(String, String)', ['Vft', 'TotalSupply']).toHex();
     if (!this._program.programId) throw new Error('Program ID is not set');
     const reply = await this._program.api.message.calculateReply({
       destination: this._program.programId,
-      origin: decodeAddress(originAddress),
+      origin: originAddress ? decodeAddress(originAddress) : ZERO_ADDRESS,
       payload,
       value: value || 0,
       gasLimit: this._program.api.blockGasLimit.toBigInt(),
       at: atBlock,
     });
+    throwOnErrorReply(reply.code, reply.payload.toU8a(), this._program.api.specVersion, this._program.registry);
     const result = this._program.registry.createType('(String, String, U256)', reply.payload);
     return result[2].toBigInt() as unknown as bigint;
   }
 
-  public subscribeToMintedEvent(callback: (data: { to: string; value: number | string }) => void | Promise<void>): Promise<() => void> {
-    return this._program.api.gearEvents.subscribeToGearEvent('UserMessageSent', ({ data: { message } }) => {;
+  public subscribeToMintedEvent(callback: (data: { to: ActorId; value: number | string | bigint }) => void | Promise<void>): Promise<() => void> {
+    return this._program.api.gearEvents.subscribeToGearEvent('UserMessageSent', ({ data: { message } }) => {
       if (!message.source.eq(this._program.programId) || !message.destination.eq(ZERO_ADDRESS)) {
         return;
       }
 
       const payload = message.payload.toHex();
       if (getServiceNamePrefix(payload) === 'Vft' && getFnNamePrefix(payload) === 'Minted') {
-        callback(this._program.registry.createType('(String, String, {"to":"[u8;32]","value":"U256"})', message.payload)[2].toJSON() as any as { to: string; value: number | string });
+        callback(this._program.registry.createType('(String, String, {"to":"[u8;32]","value":"U256"})', message.payload)[2].toJSON() as unknown as { to: ActorId; value: number | string | bigint });
       }
     });
   }
 
-  public subscribeToBurnedEvent(callback: (data: { from: string; value: number | string }) => void | Promise<void>): Promise<() => void> {
-    return this._program.api.gearEvents.subscribeToGearEvent('UserMessageSent', ({ data: { message } }) => {;
+  public subscribeToBurnedEvent(callback: (data: { from: ActorId; value: number | string | bigint }) => void | Promise<void>): Promise<() => void> {
+    return this._program.api.gearEvents.subscribeToGearEvent('UserMessageSent', ({ data: { message } }) => {
       if (!message.source.eq(this._program.programId) || !message.destination.eq(ZERO_ADDRESS)) {
         return;
       }
 
       const payload = message.payload.toHex();
       if (getServiceNamePrefix(payload) === 'Vft' && getFnNamePrefix(payload) === 'Burned') {
-        callback(this._program.registry.createType('(String, String, {"from":"[u8;32]","value":"U256"})', message.payload)[2].toJSON() as any as { from: string; value: number | string });
+        callback(this._program.registry.createType('(String, String, {"from":"[u8;32]","value":"U256"})', message.payload)[2].toJSON() as unknown as { from: ActorId; value: number | string | bigint });
       }
     });
   }
 
-  public subscribeToApprovalEvent(callback: (data: { owner: string; spender: string; value: number | string }) => void | Promise<void>): Promise<() => void> {
-    return this._program.api.gearEvents.subscribeToGearEvent('UserMessageSent', ({ data: { message } }) => {;
+  public subscribeToApprovalEvent(callback: (data: { owner: ActorId; spender: ActorId; value: number | string | bigint }) => void | Promise<void>): Promise<() => void> {
+    return this._program.api.gearEvents.subscribeToGearEvent('UserMessageSent', ({ data: { message } }) => {
       if (!message.source.eq(this._program.programId) || !message.destination.eq(ZERO_ADDRESS)) {
         return;
       }
 
       const payload = message.payload.toHex();
       if (getServiceNamePrefix(payload) === 'Vft' && getFnNamePrefix(payload) === 'Approval') {
-        callback(this._program.registry.createType('(String, String, {"owner":"[u8;32]","spender":"[u8;32]","value":"U256"})', message.payload)[2].toJSON() as any as { owner: string; spender: string; value: number | string });
+        callback(this._program.registry.createType('(String, String, {"owner":"[u8;32]","spender":"[u8;32]","value":"U256"})', message.payload)[2].toJSON() as unknown as { owner: ActorId; spender: ActorId; value: number | string | bigint });
       }
     });
   }
 
-  public subscribeToTransferEvent(callback: (data: { from: string; to: string; value: number | string }) => void | Promise<void>): Promise<() => void> {
-    return this._program.api.gearEvents.subscribeToGearEvent('UserMessageSent', ({ data: { message } }) => {;
+  public subscribeToTransferEvent(callback: (data: { from: ActorId; to: ActorId; value: number | string | bigint }) => void | Promise<void>): Promise<() => void> {
+    return this._program.api.gearEvents.subscribeToGearEvent('UserMessageSent', ({ data: { message } }) => {
       if (!message.source.eq(this._program.programId) || !message.destination.eq(ZERO_ADDRESS)) {
         return;
       }
 
       const payload = message.payload.toHex();
       if (getServiceNamePrefix(payload) === 'Vft' && getFnNamePrefix(payload) === 'Transfer') {
-        callback(this._program.registry.createType('(String, String, {"from":"[u8;32]","to":"[u8;32]","value":"U256"})', message.payload)[2].toJSON() as any as { from: string; to: string; value: number | string });
+        callback(this._program.registry.createType('(String, String, {"from":"[u8;32]","to":"[u8;32]","value":"U256"})', message.payload)[2].toJSON() as unknown as { from: ActorId; to: ActorId; value: number | string | bigint });
       }
     });
   }

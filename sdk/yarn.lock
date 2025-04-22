@@ -41,10 +41,10 @@
   resolved "https://registry.yarnpkg.com/@eslint/js/-/js-8.57.1.tgz#de633db3ec2ef6a3c89e2f19038063e8a122e2c2"
   integrity sha512-d9zaMRSTIKDLhctzH12MtXvJKSSUhaHcjV+2Z+GK+EEY7XKpP5yR4x+N3TAcHTcu963nIr+TMcCb4DBCYX1z6Q==
 
-"@gear-js/api@0.41.0":
-  version "0.41.0"
-  resolved "https://registry.yarnpkg.com/@gear-js/api/-/api-0.41.0.tgz#0610fb98f9d888ef2de65b5f448952592215caf0"
-  integrity sha512-Cg9qAIm1DGoqGqI4rJJv4Z9/UBAWGJ+E0nSds/C5QDJarFmWyz2bTRt4Oh4RROYitPUOHbGhw1guBx+Ze5Bt8A==
+"@gear-js/api@0.41.1":
+  version "0.41.1"
+  resolved "https://registry.yarnpkg.com/@gear-js/api/-/api-0.41.1.tgz#58840eeb189a8edf34ef9b6bc2faf03472eaf216"
+  integrity sha512-EnDuCjiVg9i5INMO4HukNork1VWsOVGv3+nxM8WoPYN5p4qnVT/DBlw5K/1uYDNK4B8VYkEvKwo3VMegU0QJsA==
 
 "@humanwhocodes/config-array@^0.13.0":
   version "0.13.0"
@@ -64,11 +64,6 @@
   version "2.0.3"
   resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-2.0.3.tgz#4a2868d75d6d6963e423bcf90b7fd1be343409d3"
   integrity sha512-93zYdMES/c1D69yZiKDBj0V24vqNzB/koF26KPaagAfd3P/4gUlh3Dys5ogAK+Exi9QyzlD8x/08Zt7wIKcDcA==
-
-"@invariant-labs/vara-sdk-wasm@0.1.17":
-  version "0.1.17"
-  resolved "https://registry.yarnpkg.com/@invariant-labs/vara-sdk-wasm/-/vara-sdk-wasm-0.1.17.tgz#a2d96aa549c1cc17c06fd480a974c93c4b5d5d94"
-  integrity sha512-YFZXSll76fZaPaY977sgNPeUvE7S/0kZsGhCqaY9K008XzibTg+kwVLRyW55J9ewJKvntBFg5XJjTnsbr2Kk4g==
 
 "@jridgewell/resolve-uri@^3.0.3":
   version "3.1.2"
@@ -495,6 +490,9 @@
     "@polkadot/x-global" "13.4.3"
     tslib "^2.8.0"
     ws "^8.18.0"
+
+"@subwallet/invariant-vara-sdk-wasm@file:./src/wasm/pkg":
+  version "0.1.0"
 
 "@scure/base@^1.1.1", "@scure/base@^1.1.7":
   version "1.2.4"
@@ -1525,10 +1523,24 @@ rxjs@^7.8.1:
   dependencies:
     tslib "^2.1.0"
 
-sails-js@0.3.1:
-  version "0.3.1"
-  resolved "https://registry.yarnpkg.com/sails-js/-/sails-js-0.3.1.tgz#22ff70568c1fb789cbdaed53e55ac2a0a8046221"
-  integrity sha512-zqs+C7jL9P7q7tPzSd7MhoHUAY8uCHEdEfl7QhmmmTFOhZlY487VndoPUa9qkue18VIp5eAHK+1ong0MRCc1ig==
+sails-js-types@0.4.0:
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/sails-js-types/-/sails-js-types-0.4.0.tgz#f1b28d58fc794ef87f8243726ed8d6ae60986c91"
+  integrity sha512-GYpIH9CZWPJHVkMSlvH7VvEX5q4CxtxhJyHoXb11GUM9xjYYlPcL92VA+/b8aT82uDQtuBvNoRSeJ4NFfKOgGA==
+
+sails-js-util@0.4.0:
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/sails-js-util/-/sails-js-util-0.4.0.tgz#a4caba072275ad6b565932b9fe01f8331bfb0eec"
+  integrity sha512-t3VmA4OwJh0qmE/+/KvN+fyDpNujieF5hta8E9UfIhPGjocO6J6cXoNKJxrhXC4gWTfWnRpAMR2s2/h8Kxlcfw==
+
+sails-js@0.4.0:
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/sails-js/-/sails-js-0.4.0.tgz#5124c1c545b9e958edf76b66ff17c3840bc09a9f"
+  integrity sha512-Fa7Jf0LmWA4V71D71XBr/9xHFDO5Cs+9A3nxF0JONQnVkq1+CVf1WdCpAlrGwWwTn16sJ7IEb2RgvEhyW0SBrw==
+  dependencies:
+    sails-js-util "0.4.0"
+  optionalDependencies:
+    sails-js-types "0.4.0"
 
 scale-ts@^1.6.0:
   version "1.6.1"

@@ -38,7 +38,7 @@ import {
   _alignTickToSpacing,
   _calculateSqrtPrice,
   SimulateSwapResult
-} from '@invariant-labs/vara-sdk-wasm'
+} from '@subwallet/invariant-vara-sdk-wasm'
 
 import { TypeRegistry } from '@polkadot/types'
 import {

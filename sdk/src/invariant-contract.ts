@@ -1,13 +1,13 @@
-import { GearApi, decodeAddress } from '@gear-js/api';
+import { GearApi, HexString, decodeAddress } from '@gear-js/api';
 import { TypeRegistry } from '@polkadot/types';
-import { TransactionBuilder, getServiceNamePrefix, getFnNamePrefix, ZERO_ADDRESS } from 'sails-js';
+import { TransactionBuilder, ActorId, throwOnErrorReply, getServiceNamePrefix, getFnNamePrefix, ZERO_ADDRESS } from 'sails-js';
 
 export interface InvariantConfig {
-  admin: string;
+  admin: ActorId;
   protocol_fee: Percentage;
 }
 
-export type Percentage = [number | string];
+export type Percentage = [number | string | bigint];
 
 export interface FeeTier {
   fee: Percentage;
@@ -15,16 +15,16 @@ export interface FeeTier {
 }
 
 export interface PoolKey {
-  token_x: string;
-  token_y: string;
+  token_x: ActorId;
+  token_y: ActorId;
   fee_tier: FeeTier;
 }
 
-export type TokenAmount = [number | string];
+export type TokenAmount = [number | string | bigint];
 
-export type SqrtPrice = [number | string];
+export type SqrtPrice = [number | string | bigint];
 
-export type Liquidity = [number | string];
+export type Liquidity = [number | string | bigint];
 
 export interface Position {
   pool_key: PoolKey;
@@ -33,12 +33,12 @@ export interface Position {
   upper_tick_index: number;
   fee_growth_inside_x: FeeGrowth;
   fee_growth_inside_y: FeeGrowth;
-  last_block_number: number | string;
+  last_block_number: number | string | bigint;
   tokens_owed_x: TokenAmount;
   tokens_owed_y: TokenAmount;
 }
 
-export type FeeGrowth = [number | string];
+export type FeeGrowth = [number | string | bigint];
 
 export interface CalculateSwapResult {
   amount_in: TokenAmount;
@@ -58,9 +58,9 @@ export interface Pool {
   fee_growth_global_y: FeeGrowth;
   fee_protocol_token_x: TokenAmount;
   fee_protocol_token_y: TokenAmount;
-  start_timestamp: number | string;
-  last_timestamp: number | string;
-  fee_receiver: string;
+  start_timestamp: number | string | bigint;
+  last_timestamp: number | string | bigint;
+  fee_receiver: ActorId;
 }
 
 export interface Tick {
@@ -71,7 +71,7 @@ export interface Tick {
   sqrt_price: SqrtPrice;
   fee_growth_outside_x: FeeGrowth;
   fee_growth_outside_y: FeeGrowth;
-  seconds_outside: number | string;
+  seconds_outside: number | string | bigint;
 }
 
 export interface SwapHop {
@@ -91,7 +91,7 @@ export interface PositionTick {
   index: number;
   fee_growth_outside_x: FeeGrowth;
   fee_growth_outside_y: FeeGrowth;
-  seconds_outside: number | string;
+  seconds_outside: number | string | bigint;
 }
 
 export interface QuoteResult {
@@ -105,7 +105,7 @@ export class InvariantContract {
   public readonly registry: TypeRegistry;
   public readonly service: Service;
 
-  constructor(public api: GearApi, public programId?: `0x${string}`) {
+  constructor(public api: GearApi, private _programId?: `0x${string}`) {
     const types: Record<string, any> = {
       InvariantConfig: {"admin":"[u8;32]","protocolFee":"Percentage"},
       Percentage: "(u128)",
@@ -133,7 +133,12 @@ export class InvariantContract {
     this.service = new Service(this);
   }
 
-  newCtorFromCode(code: Uint8Array | any, config: InvariantConfig): TransactionBuilder<null> {
+  public get programId(): `0x${string}` {
+    if (!this._programId) throw new Error(`Program ID is not set`);
+    return this._programId;
+  }
+
+  newCtorFromCode(code: Uint8Array | Buffer | HexString, config: InvariantConfig): TransactionBuilder<null> {
     const builder = new TransactionBuilder<null>(
       this.api,
       this.registry,
@@ -144,7 +149,7 @@ export class InvariantContract {
       code,
     );
 
-    this.programId = builder.programId;
+    this._programId = builder.programId;
     return builder;
   }
 
@@ -159,7 +164,7 @@ export class InvariantContract {
       codeId,
     );
 
-    this.programId = builder.programId;
+    this._programId = builder.programId;
     return builder;
   }
 }
@@ -180,7 +185,7 @@ export class Service {
     );
   }
 
-  public changeFeeReceiver(pool_key: PoolKey, fee_receiver: string): TransactionBuilder<null> {
+  public changeFeeReceiver(pool_key: PoolKey, fee_receiver: ActorId): TransactionBuilder<null> {
     if (!this._program.programId) throw new Error('Program ID is not set');
     return new TransactionBuilder<null>(
       this._program.api,
@@ -219,7 +224,7 @@ export class Service {
     );
   }
 
-  public createPool(token_x: string, token_y: string, fee_tier: FeeTier, init_sqrt_price: SqrtPrice, init_tick: number): TransactionBuilder<null> {
+  public createPool(token_x: ActorId, token_y: ActorId, fee_tier: FeeTier, init_sqrt_price: SqrtPrice, init_tick: number): TransactionBuilder<null> {
     if (!this._program.programId) throw new Error('Program ID is not set');
     return new TransactionBuilder<null>(
       this._program.api,
@@ -245,7 +250,7 @@ export class Service {
     );
   }
 
-  public depositSingleToken(token: string, amount: TokenAmount): TransactionBuilder<TokenAmount> {
+  public depositSingleToken(token: ActorId, amount: TokenAmount): TransactionBuilder<TokenAmount> {
     if (!this._program.programId) throw new Error('Program ID is not set');
     return new TransactionBuilder<TokenAmount>(
       this._program.api,
@@ -258,7 +263,7 @@ export class Service {
     );
   }
 
-  public depositTokenPair(token_x: [string, TokenAmount], token_y: [string, TokenAmount]): TransactionBuilder<[TokenAmount, TokenAmount]> {
+  public depositTokenPair(token_x: [ActorId, TokenAmount], token_y: [ActorId, TokenAmount]): TransactionBuilder<[TokenAmount, TokenAmount]> {
     if (!this._program.programId) throw new Error('Program ID is not set');
     return new TransactionBuilder<[TokenAmount, TokenAmount]>(
       this._program.api,
@@ -336,7 +341,7 @@ export class Service {
     );
   }
 
-  public transferPosition(index: number, receiver: string): TransactionBuilder<null> {
+  public transferPosition(index: number, receiver: ActorId): TransactionBuilder<null> {
     if (!this._program.programId) throw new Error('Program ID is not set');
     return new TransactionBuilder<null>(
       this._program.api,
@@ -362,7 +367,7 @@ export class Service {
     );
   }
 
-  public withdrawSingleToken(token: string, amount: TokenAmount | null): TransactionBuilder<TokenAmount> {
+  public withdrawSingleToken(token: ActorId, amount: TokenAmount | null): TransactionBuilder<TokenAmount> {
     if (!this._program.programId) throw new Error('Program ID is not set');
     return new TransactionBuilder<TokenAmount>(
       this._program.api,
@@ -375,7 +380,7 @@ export class Service {
     );
   }
 
-  public withdrawTokenPair(token_x: [string, TokenAmount | null], token_y: [string, TokenAmount | null]): TransactionBuilder<[TokenAmount, TokenAmount]> {
+  public withdrawTokenPair(token_x: [ActorId, TokenAmount | null], token_y: [ActorId, TokenAmount | null]): TransactionBuilder<[TokenAmount, TokenAmount]> {
     if (!this._program.programId) throw new Error('Program ID is not set');
     return new TransactionBuilder<[TokenAmount, TokenAmount]>(
       this._program.api,
@@ -401,354 +406,374 @@ export class Service {
     );
   }
 
-  public async feeTierExists(fee_tier: FeeTier, originAddress: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<boolean> {
+  public async feeTierExists(fee_tier: FeeTier, originAddress?: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<boolean> {
     const payload = this._program.registry.createType('(String, String, FeeTier)', ['Service', 'FeeTierExists', fee_tier]).toHex();
     if (!this._program.programId) throw new Error('Program ID is not set');
     const reply = await this._program.api.message.calculateReply({
       destination: this._program.programId,
-      origin: decodeAddress(originAddress),
+      origin: originAddress ? decodeAddress(originAddress) : ZERO_ADDRESS,
       payload,
       value: value || 0,
       gasLimit: this._program.api.blockGasLimit.toBigInt(),
       at: atBlock,
     });
+    throwOnErrorReply(reply.code, reply.payload.toU8a(), this._program.api.specVersion, this._program.registry);
     const result = this._program.registry.createType('(String, String, bool)', reply.payload);
     return result[2].toJSON() as unknown as boolean;
   }
 
-  public async getAllPoolsForPair(token0: string, token1: string, originAddress: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<{ ok: Array<[FeeTier, Pool]> } | { err: InvariantError }> {
+  public async getAllPoolsForPair(token0: ActorId, token1: ActorId, originAddress?: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<{ ok: Array<[FeeTier, Pool]> } | { err: InvariantError }> {
     const payload = this._program.registry.createType('(String, String, [u8;32], [u8;32])', ['Service', 'GetAllPoolsForPair', token0, token1]).toHex();
     if (!this._program.programId) throw new Error('Program ID is not set');
     const reply = await this._program.api.message.calculateReply({
       destination: this._program.programId,
-      origin: decodeAddress(originAddress),
+      origin: originAddress ? decodeAddress(originAddress) : ZERO_ADDRESS,
       payload,
       value: value || 0,
       gasLimit: this._program.api.blockGasLimit.toBigInt(),
       at: atBlock,
     });
+    throwOnErrorReply(reply.code, reply.payload.toU8a(), this._program.api.specVersion, this._program.registry);
     const result = this._program.registry.createType('(String, String, Result<Vec<(FeeTier, Pool)>, InvariantError>)', reply.payload);
     return result[2].toJSON() as unknown as { ok: Array<[FeeTier, Pool]> } | { err: InvariantError };
   }
 
-  public async getAllPositions(owner_id: string, originAddress: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<Array<Position>> {
+  public async getAllPositions(owner_id: ActorId, originAddress?: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<Array<Position>> {
     const payload = this._program.registry.createType('(String, String, [u8;32])', ['Service', 'GetAllPositions', owner_id]).toHex();
     if (!this._program.programId) throw new Error('Program ID is not set');
     const reply = await this._program.api.message.calculateReply({
       destination: this._program.programId,
-      origin: decodeAddress(originAddress),
+      origin: originAddress ? decodeAddress(originAddress) : ZERO_ADDRESS,
       payload,
       value: value || 0,
       gasLimit: this._program.api.blockGasLimit.toBigInt(),
       at: atBlock,
     });
+    throwOnErrorReply(reply.code, reply.payload.toU8a(), this._program.api.specVersion, this._program.registry);
     const result = this._program.registry.createType('(String, String, Vec<Position>)', reply.payload);
     return result[2].toJSON() as unknown as Array<Position>;
   }
 
-  public async getFeeTiers(originAddress: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<Array<FeeTier>> {
+  public async getFeeTiers(originAddress?: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<Array<FeeTier>> {
     const payload = this._program.registry.createType('(String, String)', ['Service', 'GetFeeTiers']).toHex();
     if (!this._program.programId) throw new Error('Program ID is not set');
     const reply = await this._program.api.message.calculateReply({
       destination: this._program.programId,
-      origin: decodeAddress(originAddress),
+      origin: originAddress ? decodeAddress(originAddress) : ZERO_ADDRESS,
       payload,
       value: value || 0,
       gasLimit: this._program.api.blockGasLimit.toBigInt(),
       at: atBlock,
     });
+    throwOnErrorReply(reply.code, reply.payload.toU8a(), this._program.api.specVersion, this._program.registry);
     const result = this._program.registry.createType('(String, String, Vec<FeeTier>)', reply.payload);
     return result[2].toJSON() as unknown as Array<FeeTier>;
   }
 
-  public async getLiquidityTicks(pool_key: PoolKey, tickmap: Array<number>, originAddress: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<{ ok: Array<LiquidityTick> } | { err: InvariantError }> {
+  public async getLiquidityTicks(pool_key: PoolKey, tickmap: Array<number>, originAddress?: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<{ ok: Array<LiquidityTick> } | { err: InvariantError }> {
     const payload = this._program.registry.createType('(String, String, PoolKey, Vec<i32>)', ['Service', 'GetLiquidityTicks', pool_key, tickmap]).toHex();
     if (!this._program.programId) throw new Error('Program ID is not set');
     const reply = await this._program.api.message.calculateReply({
       destination: this._program.programId,
-      origin: decodeAddress(originAddress),
+      origin: originAddress ? decodeAddress(originAddress) : ZERO_ADDRESS,
       payload,
       value: value || 0,
       gasLimit: this._program.api.blockGasLimit.toBigInt(),
       at: atBlock,
     });
+    throwOnErrorReply(reply.code, reply.payload.toU8a(), this._program.api.specVersion, this._program.registry);
     const result = this._program.registry.createType('(String, String, Result<Vec<LiquidityTick>, InvariantError>)', reply.payload);
     return result[2].toJSON() as unknown as { ok: Array<LiquidityTick> } | { err: InvariantError };
   }
 
-  public async getLiquidityTicksAmount(pool_key: PoolKey, originAddress: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<number> {
+  public async getLiquidityTicksAmount(pool_key: PoolKey, originAddress?: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<number> {
     const payload = this._program.registry.createType('(String, String, PoolKey)', ['Service', 'GetLiquidityTicksAmount', pool_key]).toHex();
     if (!this._program.programId) throw new Error('Program ID is not set');
     const reply = await this._program.api.message.calculateReply({
       destination: this._program.programId,
-      origin: decodeAddress(originAddress),
+      origin: originAddress ? decodeAddress(originAddress) : ZERO_ADDRESS,
       payload,
       value: value || 0,
       gasLimit: this._program.api.blockGasLimit.toBigInt(),
       at: atBlock,
     });
+    throwOnErrorReply(reply.code, reply.payload.toU8a(), this._program.api.specVersion, this._program.registry);
     const result = this._program.registry.createType('(String, String, u32)', reply.payload);
     return result[2].toNumber() as unknown as number;
   }
 
-  public async getPool(token_x: string, token_y: string, fee_tier: FeeTier, originAddress: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<{ ok: Pool } | { err: InvariantError }> {
+  public async getPool(token_x: ActorId, token_y: ActorId, fee_tier: FeeTier, originAddress?: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<{ ok: Pool } | { err: InvariantError }> {
     const payload = this._program.registry.createType('(String, String, [u8;32], [u8;32], FeeTier)', ['Service', 'GetPool', token_x, token_y, fee_tier]).toHex();
     if (!this._program.programId) throw new Error('Program ID is not set');
     const reply = await this._program.api.message.calculateReply({
       destination: this._program.programId,
-      origin: decodeAddress(originAddress),
+      origin: originAddress ? decodeAddress(originAddress) : ZERO_ADDRESS,
       payload,
       value: value || 0,
       gasLimit: this._program.api.blockGasLimit.toBigInt(),
       at: atBlock,
     });
+    throwOnErrorReply(reply.code, reply.payload.toU8a(), this._program.api.specVersion, this._program.registry);
     const result = this._program.registry.createType('(String, String, Result<Pool, InvariantError>)', reply.payload);
     return result[2].toJSON() as unknown as { ok: Pool } | { err: InvariantError };
   }
 
-  public async getPoolKeys(size: number, offset: number, originAddress: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<[Array<PoolKey>, number]> {
+  public async getPoolKeys(size: number, offset: number, originAddress?: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<[Array<PoolKey>, number]> {
     const payload = this._program.registry.createType('(String, String, u16, u16)', ['Service', 'GetPoolKeys', size, offset]).toHex();
     if (!this._program.programId) throw new Error('Program ID is not set');
     const reply = await this._program.api.message.calculateReply({
       destination: this._program.programId,
-      origin: decodeAddress(originAddress),
+      origin: originAddress ? decodeAddress(originAddress) : ZERO_ADDRESS,
       payload,
       value: value || 0,
       gasLimit: this._program.api.blockGasLimit.toBigInt(),
       at: atBlock,
     });
+    throwOnErrorReply(reply.code, reply.payload.toU8a(), this._program.api.specVersion, this._program.registry);
     const result = this._program.registry.createType('(String, String, (Vec<PoolKey>, u16))', reply.payload);
     return result[2].toJSON() as unknown as [Array<PoolKey>, number];
   }
 
-  public async getPosition(owner_id: string, index: number, originAddress: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<{ ok: Position } | { err: InvariantError }> {
+  public async getPosition(owner_id: ActorId, index: number, originAddress?: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<{ ok: Position } | { err: InvariantError }> {
     const payload = this._program.registry.createType('(String, String, [u8;32], u32)', ['Service', 'GetPosition', owner_id, index]).toHex();
     if (!this._program.programId) throw new Error('Program ID is not set');
     const reply = await this._program.api.message.calculateReply({
       destination: this._program.programId,
-      origin: decodeAddress(originAddress),
+      origin: originAddress ? decodeAddress(originAddress) : ZERO_ADDRESS,
       payload,
       value: value || 0,
       gasLimit: this._program.api.blockGasLimit.toBigInt(),
       at: atBlock,
     });
+    throwOnErrorReply(reply.code, reply.payload.toU8a(), this._program.api.specVersion, this._program.registry);
     const result = this._program.registry.createType('(String, String, Result<Position, InvariantError>)', reply.payload);
     return result[2].toJSON() as unknown as { ok: Position } | { err: InvariantError };
   }
 
-  public async getPositionTicks(owner: string, offset: number, originAddress: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<Array<PositionTick>> {
+  public async getPositionTicks(owner: ActorId, offset: number, originAddress?: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<Array<PositionTick>> {
     const payload = this._program.registry.createType('(String, String, [u8;32], u32)', ['Service', 'GetPositionTicks', owner, offset]).toHex();
     if (!this._program.programId) throw new Error('Program ID is not set');
     const reply = await this._program.api.message.calculateReply({
       destination: this._program.programId,
-      origin: decodeAddress(originAddress),
+      origin: originAddress ? decodeAddress(originAddress) : ZERO_ADDRESS,
       payload,
       value: value || 0,
       gasLimit: this._program.api.blockGasLimit.toBigInt(),
       at: atBlock,
     });
+    throwOnErrorReply(reply.code, reply.payload.toU8a(), this._program.api.specVersion, this._program.registry);
     const result = this._program.registry.createType('(String, String, Vec<PositionTick>)', reply.payload);
     return result[2].toJSON() as unknown as Array<PositionTick>;
   }
 
-  public async getPositionWithAssociates(owner: string, index: number, originAddress: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<{ ok: [Position, Pool, Tick, Tick] } | { err: InvariantError }> {
+  public async getPositionWithAssociates(owner: ActorId, index: number, originAddress?: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<{ ok: [Position, Pool, Tick, Tick] } | { err: InvariantError }> {
     const payload = this._program.registry.createType('(String, String, [u8;32], u32)', ['Service', 'GetPositionWithAssociates', owner, index]).toHex();
     if (!this._program.programId) throw new Error('Program ID is not set');
     const reply = await this._program.api.message.calculateReply({
       destination: this._program.programId,
-      origin: decodeAddress(originAddress),
+      origin: originAddress ? decodeAddress(originAddress) : ZERO_ADDRESS,
       payload,
       value: value || 0,
       gasLimit: this._program.api.blockGasLimit.toBigInt(),
       at: atBlock,
     });
+    throwOnErrorReply(reply.code, reply.payload.toU8a(), this._program.api.specVersion, this._program.registry);
     const result = this._program.registry.createType('(String, String, Result<(Position, Pool, Tick, Tick), InvariantError>)', reply.payload);
     return result[2].toJSON() as unknown as { ok: [Position, Pool, Tick, Tick] } | { err: InvariantError };
   }
 
-  public async getPositions(owner_id: string, size: number, offset: number, originAddress: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<{ ok: [Array<[Pool, Array<[Position, number]>]>, number] } | { err: InvariantError }> {
+  public async getPositions(owner_id: ActorId, size: number, offset: number, originAddress?: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<{ ok: [Array<[Pool, Array<[Position, number]>]>, number] } | { err: InvariantError }> {
     const payload = this._program.registry.createType('(String, String, [u8;32], u32, u32)', ['Service', 'GetPositions', owner_id, size, offset]).toHex();
     if (!this._program.programId) throw new Error('Program ID is not set');
     const reply = await this._program.api.message.calculateReply({
       destination: this._program.programId,
-      origin: decodeAddress(originAddress),
+      origin: originAddress ? decodeAddress(originAddress) : ZERO_ADDRESS,
       payload,
       value: value || 0,
       gasLimit: this._program.api.blockGasLimit.toBigInt(),
       at: atBlock,
     });
+    throwOnErrorReply(reply.code, reply.payload.toU8a(), this._program.api.specVersion, this._program.registry);
     const result = this._program.registry.createType('(String, String, Result<(Vec<(Pool, Vec<(Position, u32)>)>, u32), InvariantError>)', reply.payload);
     return result[2].toJSON() as unknown as { ok: [Array<[Pool, Array<[Position, number]>]>, number] } | { err: InvariantError };
   }
 
-  public async getProtocolFee(originAddress: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<Percentage> {
+  public async getProtocolFee(originAddress?: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<Percentage> {
     const payload = this._program.registry.createType('(String, String)', ['Service', 'GetProtocolFee']).toHex();
     if (!this._program.programId) throw new Error('Program ID is not set');
     const reply = await this._program.api.message.calculateReply({
       destination: this._program.programId,
-      origin: decodeAddress(originAddress),
+      origin: originAddress ? decodeAddress(originAddress) : ZERO_ADDRESS,
       payload,
       value: value || 0,
       gasLimit: this._program.api.blockGasLimit.toBigInt(),
       at: atBlock,
     });
+    throwOnErrorReply(reply.code, reply.payload.toU8a(), this._program.api.specVersion, this._program.registry);
     const result = this._program.registry.createType('(String, String, Percentage)', reply.payload);
     return result[2].toJSON() as unknown as Percentage;
   }
 
-  public async getTick(key: PoolKey, index: number, originAddress: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<{ ok: Tick } | { err: InvariantError }> {
+  public async getTick(key: PoolKey, index: number, originAddress?: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<{ ok: Tick } | { err: InvariantError }> {
     const payload = this._program.registry.createType('(String, String, PoolKey, i32)', ['Service', 'GetTick', key, index]).toHex();
     if (!this._program.programId) throw new Error('Program ID is not set');
     const reply = await this._program.api.message.calculateReply({
       destination: this._program.programId,
-      origin: decodeAddress(originAddress),
+      origin: originAddress ? decodeAddress(originAddress) : ZERO_ADDRESS,
       payload,
       value: value || 0,
       gasLimit: this._program.api.blockGasLimit.toBigInt(),
       at: atBlock,
     });
+    throwOnErrorReply(reply.code, reply.payload.toU8a(), this._program.api.specVersion, this._program.registry);
     const result = this._program.registry.createType('(String, String, Result<Tick, InvariantError>)', reply.payload);
     return result[2].toJSON() as unknown as { ok: Tick } | { err: InvariantError };
   }
 
-  public async getTickmap(pool_key: PoolKey, originAddress: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<Array<[number, number | string]>> {
+  public async getTickmap(pool_key: PoolKey, originAddress?: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<Array<[number, number | string | bigint]>> {
     const payload = this._program.registry.createType('(String, String, PoolKey)', ['Service', 'GetTickmap', pool_key]).toHex();
     if (!this._program.programId) throw new Error('Program ID is not set');
     const reply = await this._program.api.message.calculateReply({
       destination: this._program.programId,
-      origin: decodeAddress(originAddress),
+      origin: originAddress ? decodeAddress(originAddress) : ZERO_ADDRESS,
       payload,
       value: value || 0,
       gasLimit: this._program.api.blockGasLimit.toBigInt(),
       at: atBlock,
     });
+    throwOnErrorReply(reply.code, reply.payload.toU8a(), this._program.api.specVersion, this._program.registry);
     const result = this._program.registry.createType('(String, String, Vec<(u16, u64)>)', reply.payload);
-    return result[2].toJSON() as unknown as Array<[number, number | string]>;
+    return result[2].toJSON() as unknown as Array<[number, number | string | bigint]>;
   }
 
-  public async getUserBalances(user: string, originAddress: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<Array<[string, TokenAmount]>> {
+  public async getUserBalances(user: ActorId, originAddress?: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<Array<[ActorId, TokenAmount]>> {
     const payload = this._program.registry.createType('(String, String, [u8;32])', ['Service', 'GetUserBalances', user]).toHex();
     if (!this._program.programId) throw new Error('Program ID is not set');
     const reply = await this._program.api.message.calculateReply({
       destination: this._program.programId,
-      origin: decodeAddress(originAddress),
+      origin: originAddress ? decodeAddress(originAddress) : ZERO_ADDRESS,
       payload,
       value: value || 0,
       gasLimit: this._program.api.blockGasLimit.toBigInt(),
       at: atBlock,
     });
+    throwOnErrorReply(reply.code, reply.payload.toU8a(), this._program.api.specVersion, this._program.registry);
     const result = this._program.registry.createType('(String, String, Vec<([u8;32], TokenAmount)>)', reply.payload);
-    return result[2].toJSON() as unknown as Array<[string, TokenAmount]>;
+    return result[2].toJSON() as unknown as Array<[ActorId, TokenAmount]>;
   }
 
-  public async getUserPositionAmount(owner_id: string, originAddress: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<number> {
+  public async getUserPositionAmount(owner_id: ActorId, originAddress?: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<number> {
     const payload = this._program.registry.createType('(String, String, [u8;32])', ['Service', 'GetUserPositionAmount', owner_id]).toHex();
     if (!this._program.programId) throw new Error('Program ID is not set');
     const reply = await this._program.api.message.calculateReply({
       destination: this._program.programId,
-      origin: decodeAddress(originAddress),
+      origin: originAddress ? decodeAddress(originAddress) : ZERO_ADDRESS,
       payload,
       value: value || 0,
       gasLimit: this._program.api.blockGasLimit.toBigInt(),
       at: atBlock,
     });
+    throwOnErrorReply(reply.code, reply.payload.toU8a(), this._program.api.specVersion, this._program.registry);
     const result = this._program.registry.createType('(String, String, u32)', reply.payload);
     return result[2].toNumber() as unknown as number;
   }
 
-  public async isTickInitialized(key: PoolKey, index: number, originAddress: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<boolean> {
+  public async isTickInitialized(key: PoolKey, index: number, originAddress?: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<boolean> {
     const payload = this._program.registry.createType('(String, String, PoolKey, i32)', ['Service', 'IsTickInitialized', key, index]).toHex();
     if (!this._program.programId) throw new Error('Program ID is not set');
     const reply = await this._program.api.message.calculateReply({
       destination: this._program.programId,
-      origin: decodeAddress(originAddress),
+      origin: originAddress ? decodeAddress(originAddress) : ZERO_ADDRESS,
       payload,
       value: value || 0,
       gasLimit: this._program.api.blockGasLimit.toBigInt(),
       at: atBlock,
     });
+    throwOnErrorReply(reply.code, reply.payload.toU8a(), this._program.api.specVersion, this._program.registry);
     const result = this._program.registry.createType('(String, String, bool)', reply.payload);
     return result[2].toJSON() as unknown as boolean;
   }
 
-  public async quote(pool_key: PoolKey, x_to_y: boolean, amount: TokenAmount, by_amount_in: boolean, sqrt_price_limit: SqrtPrice, originAddress: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<{ ok: QuoteResult } | { err: InvariantError }> {
+  public async quote(pool_key: PoolKey, x_to_y: boolean, amount: TokenAmount, by_amount_in: boolean, sqrt_price_limit: SqrtPrice, originAddress?: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<{ ok: QuoteResult } | { err: InvariantError }> {
     const payload = this._program.registry.createType('(String, String, PoolKey, bool, TokenAmount, bool, SqrtPrice)', ['Service', 'Quote', pool_key, x_to_y, amount, by_amount_in, sqrt_price_limit]).toHex();
     if (!this._program.programId) throw new Error('Program ID is not set');
     const reply = await this._program.api.message.calculateReply({
       destination: this._program.programId,
-      origin: decodeAddress(originAddress),
+      origin: originAddress ? decodeAddress(originAddress) : ZERO_ADDRESS,
       payload,
       value: value || 0,
       gasLimit: this._program.api.blockGasLimit.toBigInt(),
       at: atBlock,
     });
+    throwOnErrorReply(reply.code, reply.payload.toU8a(), this._program.api.specVersion, this._program.registry);
     const result = this._program.registry.createType('(String, String, Result<QuoteResult, InvariantError>)', reply.payload);
     return result[2].toJSON() as unknown as { ok: QuoteResult } | { err: InvariantError };
   }
 
-  public async quoteRoute(amount_in: TokenAmount, swaps: Array<SwapHop>, originAddress: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<{ ok: TokenAmount } | { err: InvariantError }> {
+  public async quoteRoute(amount_in: TokenAmount, swaps: Array<SwapHop>, originAddress?: string, value?: number | string | bigint, atBlock?: `0x${string}`): Promise<{ ok: TokenAmount } | { err: InvariantError }> {
     const payload = this._program.registry.createType('(String, String, TokenAmount, Vec<SwapHop>)', ['Service', 'QuoteRoute', amount_in, swaps]).toHex();
     if (!this._program.programId) throw new Error('Program ID is not set');
     const reply = await this._program.api.message.calculateReply({
       destination: this._program.programId,
-      origin: decodeAddress(originAddress),
+      origin: originAddress ? decodeAddress(originAddress) : ZERO_ADDRESS,
       payload,
       value: value || 0,
       gasLimit: this._program.api.blockGasLimit.toBigInt(),
       at: atBlock,
     });
+    throwOnErrorReply(reply.code, reply.payload.toU8a(), this._program.api.specVersion, this._program.registry);
     const result = this._program.registry.createType('(String, String, Result<TokenAmount, InvariantError>)', reply.payload);
     return result[2].toJSON() as unknown as { ok: TokenAmount } | { err: InvariantError };
   }
 
-  public subscribeToPositionCreatedEventEvent(callback: (data: { timestamp: number | string; address: string; pool_key: PoolKey; liquidity_delta: Liquidity; lower_tick: number; upper_tick: number; current_sqrt_price: SqrtPrice }) => void | Promise<void>): Promise<() => void> {
-    return this._program.api.gearEvents.subscribeToGearEvent('UserMessageSent', ({ data: { message } }) => {;
+  public subscribeToPositionCreatedEventEvent(callback: (data: { timestamp: number | string | bigint; address: ActorId; pool_key: PoolKey; liquidity_delta: Liquidity; lower_tick: number; upper_tick: number; current_sqrt_price: SqrtPrice }) => void | Promise<void>): Promise<() => void> {
+    return this._program.api.gearEvents.subscribeToGearEvent('UserMessageSent', ({ data: { message } }) => {
       if (!message.source.eq(this._program.programId) || !message.destination.eq(ZERO_ADDRESS)) {
         return;
       }
 
       const payload = message.payload.toHex();
       if (getServiceNamePrefix(payload) === 'Service' && getFnNamePrefix(payload) === 'PositionCreatedEvent') {
-        callback(this._program.registry.createType('(String, String, {"timestamp":"u64","address":"[u8;32]","poolKey":"PoolKey","liquidityDelta":"Liquidity","lowerTick":"i32","upperTick":"i32","currentSqrtPrice":"SqrtPrice"})', message.payload)[2].toJSON() as any as { timestamp: number | string; address: string; pool_key: PoolKey; liquidity_delta: Liquidity; lower_tick: number; upper_tick: number; current_sqrt_price: SqrtPrice });
+        callback(this._program.registry.createType('(String, String, {"timestamp":"u64","address":"[u8;32]","poolKey":"PoolKey","liquidityDelta":"Liquidity","lowerTick":"i32","upperTick":"i32","currentSqrtPrice":"SqrtPrice"})', message.payload)[2].toJSON() as unknown as { timestamp: number | string | bigint; address: ActorId; pool_key: PoolKey; liquidity_delta: Liquidity; lower_tick: number; upper_tick: number; current_sqrt_price: SqrtPrice });
       }
     });
   }
 
-  public subscribeToPositionRemovedEventEvent(callback: (data: { timestamp: number | string; address: string; pool_key: PoolKey; liquidity: Liquidity; lower_tick_index: number; upper_tick_index: number; sqrt_price: SqrtPrice }) => void | Promise<void>): Promise<() => void> {
-    return this._program.api.gearEvents.subscribeToGearEvent('UserMessageSent', ({ data: { message } }) => {;
+  public subscribeToPositionRemovedEventEvent(callback: (data: { timestamp: number | string | bigint; address: ActorId; pool_key: PoolKey; liquidity: Liquidity; lower_tick_index: number; upper_tick_index: number; sqrt_price: SqrtPrice }) => void | Promise<void>): Promise<() => void> {
+    return this._program.api.gearEvents.subscribeToGearEvent('UserMessageSent', ({ data: { message } }) => {
       if (!message.source.eq(this._program.programId) || !message.destination.eq(ZERO_ADDRESS)) {
         return;
       }
 
       const payload = message.payload.toHex();
       if (getServiceNamePrefix(payload) === 'Service' && getFnNamePrefix(payload) === 'PositionRemovedEvent') {
-        callback(this._program.registry.createType('(String, String, {"timestamp":"u64","address":"[u8;32]","poolKey":"PoolKey","liquidity":"Liquidity","lowerTickIndex":"i32","upperTickIndex":"i32","sqrtPrice":"SqrtPrice"})', message.payload)[2].toJSON() as any as { timestamp: number | string; address: string; pool_key: PoolKey; liquidity: Liquidity; lower_tick_index: number; upper_tick_index: number; sqrt_price: SqrtPrice });
+        callback(this._program.registry.createType('(String, String, {"timestamp":"u64","address":"[u8;32]","poolKey":"PoolKey","liquidity":"Liquidity","lowerTickIndex":"i32","upperTickIndex":"i32","sqrtPrice":"SqrtPrice"})', message.payload)[2].toJSON() as unknown as { timestamp: number | string | bigint; address: ActorId; pool_key: PoolKey; liquidity: Liquidity; lower_tick_index: number; upper_tick_index: number; sqrt_price: SqrtPrice });
       }
     });
   }
 
-  public subscribeToCrossTickEventEvent(callback: (data: { timestamp: number | string; address: string; pool_key: PoolKey; indexes: Array<number> }) => void | Promise<void>): Promise<() => void> {
-    return this._program.api.gearEvents.subscribeToGearEvent('UserMessageSent', ({ data: { message } }) => {;
+  public subscribeToCrossTickEventEvent(callback: (data: { timestamp: number | string | bigint; address: ActorId; pool_key: PoolKey; indexes: Array<number> }) => void | Promise<void>): Promise<() => void> {
+    return this._program.api.gearEvents.subscribeToGearEvent('UserMessageSent', ({ data: { message } }) => {
       if (!message.source.eq(this._program.programId) || !message.destination.eq(ZERO_ADDRESS)) {
         return;
       }
 
       const payload = message.payload.toHex();
       if (getServiceNamePrefix(payload) === 'Service' && getFnNamePrefix(payload) === 'CrossTickEvent') {
-        callback(this._program.registry.createType('(String, String, {"timestamp":"u64","address":"[u8;32]","poolKey":"PoolKey","indexes":"Vec<i32>"})', message.payload)[2].toJSON() as any as { timestamp: number | string; address: string; pool_key: PoolKey; indexes: Array<number> });
+        callback(this._program.registry.createType('(String, String, {"timestamp":"u64","address":"[u8;32]","poolKey":"PoolKey","indexes":"Vec<i32>"})', message.payload)[2].toJSON() as unknown as { timestamp: number | string | bigint; address: ActorId; pool_key: PoolKey; indexes: Array<number> });
       }
     });
   }
 
-  public subscribeToSwapEventEvent(callback: (data: { timestamp: number | string; address: string; pool_key: PoolKey; amount_in: TokenAmount; amount_out: TokenAmount; fee: TokenAmount; start_sqrt_price: SqrtPrice; target_sqrt_price: SqrtPrice; x_to_y: boolean }) => void | Promise<void>): Promise<() => void> {
-    return this._program.api.gearEvents.subscribeToGearEvent('UserMessageSent', ({ data: { message } }) => {;
+  public subscribeToSwapEventEvent(callback: (data: { timestamp: number | string | bigint; address: ActorId; pool_key: PoolKey; amount_in: TokenAmount; amount_out: TokenAmount; fee: TokenAmount; start_sqrt_price: SqrtPrice; target_sqrt_price: SqrtPrice; x_to_y: boolean }) => void | Promise<void>): Promise<() => void> {
+    return this._program.api.gearEvents.subscribeToGearEvent('UserMessageSent', ({ data: { message } }) => {
       if (!message.source.eq(this._program.programId) || !message.destination.eq(ZERO_ADDRESS)) {
         return;
       }
 
       const payload = message.payload.toHex();
       if (getServiceNamePrefix(payload) === 'Service' && getFnNamePrefix(payload) === 'SwapEvent') {
-        callback(this._program.registry.createType('(String, String, {"timestamp":"u64","address":"[u8;32]","poolKey":"PoolKey","amountIn":"TokenAmount","amountOut":"TokenAmount","fee":"TokenAmount","startSqrtPrice":"SqrtPrice","targetSqrtPrice":"SqrtPrice","xToY":"bool"})', message.payload)[2].toJSON() as any as { timestamp: number | string; address: string; pool_key: PoolKey; amount_in: TokenAmount; amount_out: TokenAmount; fee: TokenAmount; start_sqrt_price: SqrtPrice; target_sqrt_price: SqrtPrice; x_to_y: boolean });
+        callback(this._program.registry.createType('(String, String, {"timestamp":"u64","address":"[u8;32]","poolKey":"PoolKey","amountIn":"TokenAmount","amountOut":"TokenAmount","fee":"TokenAmount","startSqrtPrice":"SqrtPrice","targetSqrtPrice":"SqrtPrice","xToY":"bool"})', message.payload)[2].toJSON() as unknown as { timestamp: number | string | bigint; address: ActorId; pool_key: PoolKey; amount_in: TokenAmount; amount_out: TokenAmount; fee: TokenAmount; start_sqrt_price: SqrtPrice; target_sqrt_price: SqrtPrice; x_to_y: boolean });
       }
     });
   }
