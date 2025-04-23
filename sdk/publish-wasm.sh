@@ -13,4 +13,4 @@ fi
 jq ".version = \"$1\"" src/wasm/pkg/package.json > temp.json && mv temp.json src/wasm/pkg/package.json
 
 cd src/wasm/pkg
-yarn publish
+yarn publish --access=public

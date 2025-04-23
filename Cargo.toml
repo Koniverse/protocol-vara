@@ -59,7 +59,7 @@ sails-rs = "=0.7.3"
 gear-wasm-builder = "=1.7.1"
 gear-wasm-instrument = "=1.7.1"
 sails-client-gen = "=0.7.3"
-vft-service = { git = "https://github.com/gear-foundation/standards" }
+vft-service = { git = "https://github.com/gear-foundation/standards", rev="541cbf053c0c9df99bd2a00f3c13c5cfb702ab1b" }
 
 # External
 scale-info = { version = "2", default-features = false }
